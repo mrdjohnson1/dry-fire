@@ -129,8 +129,9 @@ footer{font-size:14px;color:var(--soft)}
       <button class="go" id="tGo">Start</button>
       <label class="chk"><input type="checkbox" id="tUsePar" checked>Par beep</label>
       <label class="chk"><input type="checkbox" id="tLoop">Auto repeat</label>
+      <label class="chk"><input type="checkbox" id="tVoice" checked>Voice commands</label>
     </div>
-    <label>Space bar starts and stops. Random delay, start beep, then par beep.</label>
+    <label>Start: "Are you ready?", "Standby", random delay, start beep. At par: double beep, then "Make ready for your next string!" Space bar starts and stops. Stopping after the beep ends the string early.</label>
   </div>
   <div class="grid">
     <div class="stat"><h2>Progress</h2><span id="pCount"></span></div>
@@ -237,7 +238,8 @@ $('dNext').onclick=()=>go(Math.min(28,S.day+1));
 $('dMark').onclick=()=>{S.done[S.day]=!S.done[S.day];save();render()};
 
 /* timer */
-const T={on:false,for:null,ctx:null,raf:0,startAt:0,parAt:0,loopT:0};
+const T={phase:'idle',run:0,for:null,ctx:null,raf:0,startAt:0,parAt:0,loopT:0,osc:[]};
+const CMD1='Are you ready?',CMD2='Standby',CMD3='Make ready for your next string!';
 function loadTimer(d,i){
   const t=dr(d.day,i),x=d.drills[i];T.for=d.day+'-'+i;
   const m=isMatch(d);$('tUsePar').checked=!m&&t.par!=null;if(t.par!=null)$('tPar').value=f2(t.par);
@@ -245,29 +247,62 @@ function loadTimer(d,i){
   window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});
 }
 function beep(at,freq,dur){const c=T.ctx,o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.value=freq;g.gain.setValueAtTime(0.0001,at);g.gain.exponentialRampToValueAtTime(0.35,at+0.005);g.gain.setValueAtTime(0.35,at+dur-0.01);g.gain.exponentialRampToValueAtTime(0.0001,at+dur);o.connect(g).connect(c.destination);o.start(at);o.stop(at+dur+0.02);T.osc.push(o)}
-function startRun(){
+const hasVoice=()=>{try{return $('tVoice').checked&&'speechSynthesis' in window}catch(e){return false}};
+function pickVoice(){try{const v=speechSynthesis.getVoices().filter(x=>/^en/i.test(x.lang));return v.find(x=>/en-US/i.test(x.lang)&&x.localService)||v.find(x=>/en-US/i.test(x.lang))||v[0]||null}catch(e){return null}}
+function say(text){return new Promise(res=>{
+  if(!hasVoice()){res();return}
+  let done=false;const fin=()=>{if(!done){done=true;res()}};
+  try{const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=1;u.volume=1;const v=pickVoice();if(v)u.voice=v;u.onend=fin;u.onerror=fin;speechSynthesis.speak(u)}catch(e){fin()}
+  setTimeout(fin,1500+text.length*110);
+})}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const setState=t=>{$('tState').textContent=t};
+async function startRun(){
   try{if(!T.ctx)T.ctx=new (window.AudioContext||window.webkitAudioContext)();T.ctx.resume&&T.ctx.resume()}catch(e){T.ctx=null}
-  let mn=Math.max(0,parseFloat($('tMin').value)||0),mx=Math.max(mn,parseFloat($('tMax').value)||mn);
+  try{speechSynthesis.cancel()}catch(e){}
+  const run=++T.run;T.phase='voice';T.osc=[];
+  $('tGo').textContent='Stop';$('tGo').classList.add('stop');$('tRead').textContent='0.00';$('tRead').classList.remove('hot');
+  if(hasVoice()){
+    setState(CMD1);await say(CMD1);if(run!==T.run)return;
+    await wait(1200);if(run!==T.run)return;
+    setState(CMD2);await say(CMD2);if(run!==T.run)return;
+  }else setState(CMD2);
+  const mn=Math.max(0,parseFloat($('tMin').value)||0),mx=Math.max(mn,parseFloat($('tMax').value)||mn);
   const delay=mn+Math.random()*(mx-mn),par=parseFloat($('tPar').value),usePar=$('tUsePar').checked&&par>0;
-  T.on=true;T.osc=[];$('tGo').textContent='Stop';$('tGo').classList.add('stop');
-  const now=T.ctx?T.ctx.currentTime:0;T.base=performance.now();
-  T.startAt=T.base+delay*1000;T.parAt=usePar?T.startAt+par*1000:0;
+  const now=T.ctx?T.ctx.currentTime:0;
+  T.startAt=performance.now()+delay*1000;T.parAt=usePar?T.startAt+par*1000:0;
   if(T.ctx){beep(now+delay,2600,0.28);if(usePar){beep(now+delay+par,3300,0.12);beep(now+delay+par+0.16,3300,0.12)}}
-  $('tState').textContent='Standby';$('tRead').textContent='0.00';$('tRead').classList.remove('hot');
-  cancelAnimationFrame(T.raf);tick();
+  T.phase='timing';cancelAnimationFrame(T.raf);tick(run);
 }
-function tick(){
-  if(!T.on)return;const n=performance.now();
-  if(n<T.startAt){$('tState').textContent='Standby'}
-  else if(T.parAt&&n>=T.parAt){$('tRead').textContent=f2((T.parAt-T.startAt)/1000);$('tRead').classList.add('hot');$('tState').textContent='Par';
-    if($('tLoop').checked){const rest=Math.max(1,parseFloat($('tRest').value)||5);$('tState').textContent='Par. Next rep in '+rest+' s';T.on=false;T.loopT=setTimeout(()=>{if(T.looping)startRun()},rest*1000);return}
-    endRun(true);return}
-  else{const el=(n-T.startAt)/1000;$('tRead').textContent=f2(el);$('tState').textContent='Go';if(!T.parAt&&el>=30){endRun(true);return}}
-  T.raf=requestAnimationFrame(tick);
+function tick(run){
+  if(run!==T.run||T.phase!=='timing')return;const n=performance.now();
+  if(n<T.startAt)setState(CMD2);
+  else if(T.parAt&&n>=T.parAt){$('tRead').textContent=f2((T.parAt-T.startAt)/1000);$('tRead').classList.add('hot');setState('Par');finishString(run,true);return}
+  else{const el=(n-T.startAt)/1000;$('tRead').textContent=f2(el);setState('Go');if(!T.parAt&&el>=30){finishString(run,true);return}}
+  T.raf=requestAnimationFrame(()=>tick(run));
 }
-function endRun(keep){T.on=false;cancelAnimationFrame(T.raf);clearTimeout(T.loopT);T.looping=false;$('tGo').textContent='Start';$('tGo').classList.remove('stop');
-  if(!keep){(T.osc||[]).forEach(o=>{try{o.stop()}catch(e){}});$('tState').textContent='Stopped'}else if($('tState').textContent==='Go')$('tState').textContent='Stopped'}
-function toggle(){if(T.on||T.looping){endRun(false)}else{T.looping=$('tLoop').checked;startRun()}}
+async function finishString(run,mayLoop){
+  T.phase='done';cancelAnimationFrame(T.raf);
+  await wait(450);if(run!==T.run)return;
+  if(hasVoice()){setState(CMD3);await say(CMD3);if(run!==T.run)return}
+  if(mayLoop&&$('tLoop').checked){
+    const rest=Math.max(1,parseFloat($('tRest').value)||5);setState('Next string in '+rest+' s');
+    T.loopT=setTimeout(()=>{if(run===T.run)startRun()},rest*1000);return}
+  resetBtn();T.phase='idle';if(!hasVoice())setState('Done');else setState(CMD3);
+}
+function resetBtn(){$('tGo').textContent='Start';$('tGo').classList.remove('stop')}
+function stopAll(){T.run++;T.phase='idle';cancelAnimationFrame(T.raf);clearTimeout(T.loopT);T.osc.forEach(o=>{try{o.stop()}catch(e){}});try{speechSynthesis.cancel()}catch(e){}resetBtn()}
+function toggle(){
+  if(T.phase==='idle'){startRun();return}
+  if(T.phase==='timing'&&performance.now()>=T.startAt){
+    /* shooter finished the string before par or with no par: end it like a completed string */
+    const el=(performance.now()-T.startAt)/1000;stopAll();$('tRead').textContent=f2(el);
+    const run=T.run;T.phase='done';$('tGo').textContent='Stop';$('tGo').classList.add('stop');finishString(run,false);return}
+  stopAll();setState('Stopped');
+}
+try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}catch(e){}
+try{const v=localStorage.getItem(KEY+'-voice');if(v==='0')$('tVoice').checked=false}catch(e){}
+$('tVoice').addEventListener('change',()=>{try{localStorage.setItem(KEY+'-voice',$('tVoice').checked?'1':'0')}catch(e){}});
 $('tGo').onclick=toggle;
 document.addEventListener('keydown',e=>{if(e.code==='Space'&&!/^(INPUT|TEXTAREA|BUTTON|A|SELECT)$/.test(e.target.tagName)){e.preventDefault();toggle()}});
 $('tPar').addEventListener('input',()=>{T.for=null;$('tFor').textContent='Manual par'});
