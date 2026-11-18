@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1c1d1f">
+<title>Dry Fire Competence</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231c1d1f'/%3E%3Cpath d='M22 8h20l10 12v24L42 56H22L12 44V20z' fill='%23d9bf8f'/%3E%3Crect x='24' y='22' width='16' height='22' fill='%23c8231b'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dry Fire">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday training tool, range-day plain
+   IDEA a USPSA shot timer bolted onto a stage briefing sheet
+   PICTURE the live timer readout beside a 28-day grid that fills like a scored target
+   COLOUR cardboard target tan, steel black, A-zone red accent
+   TYPE Barlow Condensed for readouts and titles, Barlow for text
+   LAYOUT laptop: timer left, progress grid right, day's two drills below; phone: title, timer, grid, drills */
+:root{color-scheme:light dark;--bg:light-dark(#f5eee1,#141412);--ink:light-dark(#1b1b19,#efe8da);--soft:light-dark(#5d574c,#b3aa98);--tan:light-dark(#d9bf8f,#5c4a2c);--tanInk:light-dark(#1b1b19,#f5eee1);--card:light-dark(#fffdf8,#1e1d1a);--line:light-dark(#dccfb6,#34312b);--steel:#1c1d1f;--steel2:#2a2c2f;--red:#c8231b;--redSoft:light-dark(#f6d9d5,#3b1714);--ok:light-dark(#1f6b3a,#6fd08f)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html{scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Barlow,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Barlow Condensed",Barlow,sans-serif;font-weight:700;line-height:1.05;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1{font-size:clamp(32px,5vw,48px)}h2{font-size:clamp(26px,3.4vw,34px)}h3{font-size:24px}
+a{color:inherit}
+.band{padding:clamp(20px,3vw,40px) max(4vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+.top{background:var(--tan);color:var(--tanInk)}
+.top .wrap{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}
+.top p{margin:6px 0 0;font-weight:500}
+.xlink{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:8px 16px;border-radius:8px;background:var(--steel);color:#fff;text-decoration:none;font-weight:600}
+.xlink svg{width:18px;height:18px;fill:#fff}
+.xlink:hover{background:#000}
+button,input,select{font:inherit;font-size:16px;color:inherit}
+button{min-height:44px;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:600}
+button:hover{border-color:var(--ink)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+input[type=number]{width:5.5em;min-height:44px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card)}
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px}
+.timer{background:var(--steel);color:#f1ede4;border-radius:14px;padding:22px;display:grid;gap:14px;align-content:start}
+.timer label{color:#bdb6a8;font-size:14px}
+.timer input{background:var(--steel2);border-color:#45484d;color:#fff}
+.read{font:700 clamp(72px,11vw,128px)/.9 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;color:#fff;letter-spacing:-.02em}
+.read.hot{color:#ff5a4f}
+.stat{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.stat b{font:700 22px "Barlow Condensed",sans-serif;color:#ffcfb0}
+.stat span{color:#bdb6a8}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end}
+.row>div{display:grid;gap:4px}
+.go{background:var(--red);border-color:var(--red);color:#fff;font-size:20px;min-width:9em;min-height:56px}
+.go:hover{border-color:#fff}
+.go.stop{background:#f1ede4;color:var(--steel);border-color:#f1ede4}
+.chk{display:flex;align-items:center;gap:8px;min-height:44px;color:#f1ede4!important}
+.chk input{width:22px;height:22px;accent-color:var(--red)}
+.grid{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:14px;align-content:start}
+.wk{display:grid;grid-template-columns:5.2em minmax(0,1fr);gap:10px;align-items:center}
+.wk small{display:block;color:var(--soft);font-size:13px;line-height:1.2}
+.wk strong{font-family:"Barlow Condensed",sans-serif;font-size:20px}
+.cells{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cell{min-height:44px;padding:0;border-radius:6px;font:700 18px "Barlow Condensed",sans-serif;background:var(--bg);border:1px solid var(--line)}
+.cell.done{background:var(--steel);color:#fff;border-color:var(--steel)}
+.cell.done::after{content:"";display:block;width:8px;height:8px;border-radius:50%;background:var(--red);margin:2px auto 0}
+.cell.cur{outline:3px solid var(--red);outline-offset:1px}
+.meter{height:10px;border-radius:5px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);transition:width .4s}
+.dayhead{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.dayhead .meta{color:var(--soft);font-weight:500}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--redSoft);color:var(--ink);font-size:14px;font-weight:600;margin-left:6px;vertical-align:middle}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btns a.vid{display:inline-flex;align-items:center;min-height:44px;padding:8px 14px;border-radius:8px;background:var(--steel);color:#fff;text-decoration:none;font-weight:600}
+button.mark.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.drills{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.drill{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:14px;align-content:start}
+.drill .n{color:var(--red);font-weight:600;font-size:14px}
+dl{margin:0;display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px}
+dt{font-weight:600}dd{margin:0}
+.track{border-top:1px solid var(--line);padding-top:14px;display:grid;gap:12px}
+.par{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.par .v{font:700 44px/1 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.par .v small{font-size:20px;color:var(--soft)}
+.pips{display:flex;gap:6px;align-items:center}
+.pips i{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink)}
+.pips i.on{background:var(--red);border-color:var(--red)}
+.pips span{font-size:14px;color:var(--soft);margin-left:4px}
+.yes{background:var(--steel);color:#fff;border-color:var(--steel)}
+.hist{font-size:14px;color:var(--soft);font-variant-numeric:tabular-nums}
+.flash{font-weight:600;color:var(--ok);min-height:1.4em;font-size:15px}
+.notes{background:var(--steel);color:#efe8da}
+.notes .cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 40px;margin-top:20px}
+.notes h3{color:#ffcfb0;margin-bottom:6px}
+.notes p{margin:0;max-width:68ch}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;align-items:center}
+.tools button{background:var(--steel2);color:#efe8da;border-color:#45484d}
+textarea{width:100%;min-height:90px;font:14px/1.4 ui-monospace,monospace;border-radius:8px;padding:8px;background:var(--steel2);color:#fff;border:1px solid #45484d;margin-top:10px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-width:3.4em}
+.seg button.on{background:var(--ink);color:var(--bg)}
+footer{font-size:14px;color:var(--soft)}
+@media(max-width:900px){.hero{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:760px){.drills,.notes .cols{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:420px){.wk{grid-template-columns:minmax(0,1fr)}.cells{gap:4px}.timer,.grid,.drill{padding:16px}}
+@media(prefers-reduced-motion:reduce){.meter i{transition:none}}
+</style>
+</head>
+<body>
+<header class="band top"><div class="wrap">
+  <div><h1>Dry Fire Program: Competence</h1><p>Four weeks, 28 days, two drills a day.</p></div>
+  <a class="xlink" href="https://x.com/KingWash1789" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.9-6.4L6.3 22H3.2l7.3-8.3L1 2h6.3l4.4 5.9zm-1.1 18h1.7L6.3 3.9H4.5z"/></svg>Video demos: @KingWash1789</a>
+</div></header>
+
+<main>
+<section class="band"><div class="wrap hero">
+  <div class="timer" aria-label="Par timer">
+    <div class="stat"><b id="tState">Ready</b><span id="tFor">Manual par</span></div>
+    <div class="read" id="tRead" aria-live="off">0.00</div>
+    <div class="row">
+      <div><label for="tPar">Par (s)</label><input id="tPar" type="number" step="0.05" min="0" value="2.00"></div>
+      <div><label for="tMin">Delay min</label><input id="tMin" type="number" step="0.5" min="0" value="1.5"></div>
+      <div><label for="tMax">Delay max</label><input id="tMax" type="number" step="0.5" min="0" value="4"></div>
+      <div><label for="tRest">Rest (s)</label><input id="tRest" type="number" step="1" min="1" value="5"></div>
+    </div>
+    <div class="row">
+      <button class="go" id="tGo">Start</button>
+      <label class="chk"><input type="checkbox" id="tUsePar" checked>Par beep</label>
+      <label class="chk"><input type="checkbox" id="tLoop">Auto repeat</label>
+    </div>
+    <label>Space bar starts and stops. Random delay, start beep, then par beep.</label>
+  </div>
+  <div class="grid">
+    <div class="stat"><h2>Progress</h2><span id="pCount"></span></div>
+    <div class="meter"><i id="pBar"></i></div>
+    <div id="weeks"></div>
+  </div>
+</div></section>
+
+<section class="band" id="daySec" style="padding-top:0"><div class="wrap">
+  <div class="dayhead">
+    <div><h2 id="dTitle"></h2><div class="meta" id="dMeta"></div></div>
+    <div class="btns">
+      <button id="dPrev" aria-label="Previous day">Prev</button>
+      <button id="dNext" aria-label="Next day">Next</button>
+      <a class="vid" id="dVid" target="_blank" rel="noopener">Watch demo on X</a>
+      <button class="mark" id="dMark">Mark day complete</button>
+    </div>
+  </div>
+  <div class="btns" id="stepRow" style="margin-bottom:16px"><span>Par drop after 3 successful reps:</span><span class="seg"><button data-step="0.1">0.10</button><button data-step="0.2">0.20</button></span></div>
+  <div class="drills" id="drills"></div>
+</div></section>
+
+<section class="band notes"><div class="wrap">
+  <h2>How to run the program</h2>
+  <div class="cols">
+    <div><h3>Speed Mode</h3><p>For each drill, start with a comfortable par. This means something you can easily complete without difficulty. Upon 3 consecutive Successful Reps, lower the par time by .1 or .2. Successful Reps are defined as all of the following: Beat Par, Good Grip, Good Reload (if applicable), and Called Shots. Note that I specifically do not care about the accuracy on target of your reps, only that you saw what you did. You will fail. Not only is that intended, it is critical.</p></div>
+    <div><h3>Match Mode</h3><p>There are no par times for Match Mode. Each drill is to be executed by putting the sights on the target and calling acceptable shots. Repeatability with minimal error is the goal. Make up misses and uncalled shots</p></div>
+    <div><h3>Warm Up</h3><p>Set a timer for 5-10 minutes. Engage targets at will. Stretch your fingers. Shake your hands out. Get them warm and ready to work. This is also a good opportunity to play with drills that you find particularly difficult to execute subconsiously.</p></div>
+    <div><h3>Daily Drills</h3><p>Set a timer for at least 5 minutes and follow the instructions outlined above. Your goal is to get to the limit of your ability to see and manipulate the gun. This is the stimulus required to elicit the adaptation of increased speed.</p></div>
+  </div>
+  <div class="tools">
+    <button id="bCopy">Copy progress backup</button>
+    <button id="bRestore">Restore from backup</button>
+    <button id="bReset">Reset all progress</button>
+    <span id="bMsg" role="status"></span>
+  </div>
+  <div id="restoreBox" hidden><textarea id="restoreTxt" aria-label="Paste backup"></textarea><div class="tools" style="margin-top:10px"><button id="bApply">Apply backup</button><button id="bCancel">Cancel</button></div></div>
+  <div id="resetBox" class="tools" hidden><span>Erase every par, rep and completed day?</span><button id="bResetYes">Yes, erase</button><button id="bResetNo">Keep</button></div>
+</div></section>
+</main>
+<footer class="band"><div class="wrap">Progress saves in this browser only. Use the backup button to move it to another device. Always dry fire with an unloaded gun and no ammunition in the room.</div></footer>
+
+<script>
+{
+const W=[{"title":"Week 1","mode":"Speed Mode","focus":"Core Skills","days":[{"day":1,"video":"https://x.com/KingWash1789/status/1940154841713504289","drills":[{"name":"Max Speed Draw","setup":"Target at 5 yards","start":"Hands at sides","procedure":"Draw and fire one"},{"name":"Max Speed Surrender Draw","setup":"Target at 20 yards","start":"Wrists above shoulders","procedure":"Draw and fire one"}]},{"day":2,"video":"https://x.com/KingWash1789/status/1940533755271053466","drills":[{"name":"Max Speed Reload","setup":"Target at 5 yards","start":"Gun in hand aimed at target","procedure":"Reload and fire one"},{"name":"2 Reload 2","setup":"Target at 7 yards","start":"Hands at sides","procedure":"Draw and fire two, reload and fire two"}]},{"day":3,"video":"https://x.com/KingWash1789/status/1940884270912098327","drills":[{"name":"Bill Drill","setup":"Target at 7 yards","start":"Hands at sides","procedure":"Draw and fire six"},{"name":"Transitions 1","setup":"3 Targets at 7 yards, each target touching","start":"Hands at sides","procedure":"Draw and fire two at each. Alternate directions."}]},{"day":4,"video":"https://x.com/KingWash1789/status/1941243735020536110","drills":[{"name":"Transitions 2","setup":"3 Targets at 7 yards, 1 yard apart","start":"Hands at sides","procedure":"Draw and fire two at each. Alternate directions."},{"name":"Vice Prez","setup":"3 Targets at 10 yards, 1 yard apart","start":"Hands at sides","procedure":"Draw and fire two at each, reload and fire two at each"}]},{"day":5,"video":"https://x.com/KingWash1789/status/1941557954940981346","drills":[{"name":"Transitions 3","setup":"3 Targets at 7 yards, each target ~22\u00b0 swing apart","start":"Hands at sides","procedure":"Draw and fire two at each. Alternate directions."},{"name":"Accelerator","setup":"3 Targets one at 7, 15, 25. 1 yard apart","start":"Hands at sides","procedure":"Draw and fire two at each, reload and fire two at each. Alternate directions."}]},{"day":6,"video":"https://x.com/KingWash1789/status/1941955089067053085","drills":[{"name":"Transitions 4","setup":"3 Targets at 7 yards, each target ~45\u00b0 swing apart","start":"Hands at sides","procedure":"Draw and fire two at each. Alternate directions."},{"name":"Plate Rack","setup":"6 - 8 inch plates at 10 yards, 12 inches center to center","start":"Wrists above shoulders","procedure":"Draw and fire 1 at each. Alternate directions."}]},{"day":7,"video":"https://x.com/KingWash1789/status/1942319357649908158","drills":[{"name":"Transitions 5","setup":"2 Targets at 7 yards, ~90\u00b0 swing apart","start":"Hands at sides","procedure":"Draw and fire two at each. Alternate directions."},{"name":"El Prez","setup":"3 Targets at 10 yards, 1 yard apart","start":"Facing uprange, toes touching rear of box. Wrists above shoulders.","procedure":"Draw and fire two at each, reload and fire two at each"}]}]},{"title":"Week 2","mode":"Speed Mode","focus":"Core Movement Skills","days":[{"day":8,"video":"https://x.com/KingWash1789/status/1942684786666938826","drills":[{"name":"Rolling Start","setup":"3 Targets at 10 yards, 1 yard apart","start":"Hands at sides","procedure":"Draw and move to a position 3-5 steps away and fire two at each"},{"name":"Rolling Engagement","setup":"Target at 20 yards","start":"Hands at sides","procedure":"Draw and fire six while moving forward"}]},{"day":9,"video":"https://x.com/KingWash1789/status/1943036976321708316","drills":[{"name":"Easy Exit/Easy Entry","setup":"3 Targets at 7 yards, 1 yard apart. 2 Shooting positions, 3-5 steps apart","start":"Hands at sides","procedure":"Draw and fire two at each, reload move to position 2, fire two at each"},{"name":"Bar Hop","setup":"2 Targets at 10 yards. 1 fault line to hop.","start":"Hands at sides","procedure":"Draw and fire two at each from each side of the fault line. Alternate stepping forward and backward."}]},{"day":10,"video":"https://x.com/KingWash1789/status/1943371591041392663","drills":[{"name":"Hard Exit/Hard Entry","setup":"3 Targets at 25 yards, 1 yard apart. 2 Shooting positions, 3-5 steps apart","start":"Hands at sides","procedure":"Draw fire two at each, reload move to position 2, fire two at each"},{"name":"Retreating Engagement","setup":"Target at 10 yards","start":"Hands at sides","procedure":"Draw and fire six while moving backward"}]},{"day":11,"video":"https://x.com/KingWash1789/status/1943752925777735883","drills":[{"name":"Easy Exit/Hard Entry","setup":"3 Targets, 2 at 7 yards 1 at 25 yards. 2 Shooting positions, 3-5 steps apart","start":"Hands at sides","procedure":"Draw and fire two at the 25 then the 7s, move to position 2, fire two at the 25 then the 7s"},{"name":"Bar Hop","setup":"2 Targets at 10 yards. 1 fault line to hop.","start":"Hands at sides","procedure":"Draw and fire two at each from each side of the fault line. Alternate directions laterally."}]},{"day":12,"video":"https://x.com/KingWash1789/status/1944122125616382200","drills":[{"name":"Hard Exit/Easy Entry","setup":"3 Targets, 2 at 7 yards 1 at 25. 2 Shooting positions, 3-5 steps apart","start":"Hands at sides","procedure":"Draw and fire two at the 7s then the 25, move to position 2, fire two at the 7s and then the 25"},{"name":"Lateral Engagement","setup":"1 Target at 10 yards","start":"Hands at sides","procedure":"Draw and fire 6 while moving laterally. Alternate directions."}]},{"day":13,"video":"https://x.com/KingWash1789/status/1944479012404809829","drills":[{"name":"Barricade Work","setup":"3 Targets at 15 yards, 1 yard apart. 1 vision barrier. Center target centered on barricade","start":"Hands at sides","procedure":"Draw and fire 2 at each target from each side with your feet within the width of the barricade"},{"name":"Bar Hop","setup":"2 Targets at 25 yards. 1 fault line to hop","start":"Hands at sides","procedure":"Draw and fire two at each from each side of the fault line. Alternate directions forward/backward."}]},{"day":14,"video":"https://x.com/KingWash1789/status/1944917717909152153","drills":[{"name":"Shuffling","setup":"3 Targets at 10 yards, 1 yard apart.","start":"Hands at sides","procedure":"Draw and fire 2 at each target, shuffle 2-3 steps laterally, fire 2 at each target. Alternate directions."},{"name":"Reload On The Move","setup":"3 Targets at 10 yards, 1 yard apart. 2 Shooting positions, 3-5 steps apart","start":"Hands at sides","procedure":"Draw and fire 2 at each target from position 1, reload on the way to position 2, fire 2 at each target."}]}]},{"title":"Week 3","mode":"Speed Mode","focus":"Secondary Skills","days":[{"day":15,"video":"https://x.com/KingWash1789/status/1945191842443657300","drills":[{"name":"Unloaded Start","setup":"1 Target at 25 yards","start":"Hands at sides, gun unloaded in holster","procedure":"Draw, load, and fire 2"},{"name":"Bill Reload Strong","setup":"1 Target at 7 yards","start":"Hands at sides","procedure":"Draw and fire 6 freestyle, reload, fire 6 strong hand only"}]},{"day":16,"video":"https://x.com/KingWash1789/status/1945580748682985931","drills":[{"name":"Unloaded Table Start","setup":"1 Target at 7 yards","start":"Hands at sides, gun unloaded on table with magazine","procedure":"Draw, load from table, and fire 2"},{"name":"Bill Reload Weak","setup":"1 Target at 7 yards","start":"Hands at sides","procedure":"Draw and fire 6 freestyle, reload, fire 6 weak hand only"}]},{"day":17,"video":"https://x.com/KingWash1789/status/1945923669584183400","drills":[{"name":"Activator Sequence","setup":"1 Popper at 20 yards, 1 Partial at 7 yards, 2 Open targets at a 30ish degree swing at 7 yards","start":"Wrists above shoulders","procedure":"Draw and fire at popper, then transition to 2 open targets, then transition to partial"},{"name":"Vice Prez Strong","setup":"3 Targets at 10 yards, 1 yard apart.","start":"Hands at sides","procedure":"Draw and fire 2 at each target, reload, fire 2 at each target strong hand only"}]},{"day":18,"video":"https://x.com/KingWash1789/status/1946297797592170814","drills":[{"name":"Kneeling","setup":"1 Target at 15 yards","start":"Hands at sides","procedure":"Draw, kneel, and fire 6 at target"},{"name":"Vice Prez Weak","setup":"3 Targets at 10 yards, 1 yard apart.","start":"Hands at sides","procedure":"Draw and fire 2 at each target, reload, fire 2 at each target weak hand only"}]},{"day":19,"video":"https://x.com/KingWash1789/status/1946635281865781291","drills":[{"name":"Low Port","setup":"2 Targets at 10 yards. Top of 'port' is 36 inches from ground","start":"Hands at sides, one step out from shooting position","procedure":"Draw and fire 2 at each from the low port position"},{"name":"S/W Aces","setup":"1 Target at 15 yards","start":"Hands at sides","procedure":"Draw and fire 2 strong hand only, reload, fire 2 weak hand only"}]},{"day":20,"video":"https://x.com/KingWash1789/status/1947037527484826093","drills":[{"name":"Hard Lean Strongside","setup":"2 Targets at 10 yards. Barricade with a fault line 6 inches in from edge.","start":"Hands at sides, 3 steps away","procedure":"Draw, move to barricade and fire 2 at each from the strongside."},{"name":"Tracking Swingers","setup":"1 Swinger at 7 yards","start":"Wrists above shoulders","procedure":"Activate swinger then draw and fire 10, tracking it through it's arc"}]},{"day":21,"video":"https://x.com/KingWash1789/status/1947370901625782375","drills":[{"name":"Hard Lean Weakside","setup":"2 Targets at 10 yards. Barricade with a fault line 6 inches in from edge.","start":"Hands at sides, 3 steps away","procedure":"Draw, move to barricade and fire 2 at each from the weakside."},{"name":"Trapping Swingers","setup":"1 Swinger at 7 yards, 1-3 additional targets.","start":"Wrists above shoulders","procedure":"Activate swinger fire 2 at all targets finishing with the swinger during the pause as it changes direction"}]}]},{"title":"Week 4","mode":"Match Mode","focus":"","days":[{"day":22,"video":"https://x.com/KingWash1789/status/1947740215482671275","drills":[{"name":"Bar Hop","setup":"2 Targets at 20 yards. 1 fault line to hop","start":"Hands at sides","procedure":"Draw and fire two at each from each side of the fault line. Alternate directions forward/backward."},{"name":"Vice Prez Partials","setup":"3 Partial Targets at 10 yards, 1 yard apart.","start":"Hands at sides","procedure":"Draw and fire 2 at each target, reload, fire 2 at each target"}]},{"day":23,"video":"https://x.com/KingWash1789/status/1948109074710822939","drills":[{"name":"Blending Positions","setup":"2 sets of 2 Targets at 10 yards, Barricade so they can't all be seen from one position","start":"Hands at sides","procedure":"Draw and fire 2 at each target without moving your lead foot once it has planted"},{"name":"El Prez 25","setup":"3 Targets at 25 yards, 1 yard apart.","start":"Wrists above shoulders, facing uprange toes on same line","procedure":"Draw and fire 2 at each target, reload, fire 2 at each target"}]},{"day":24,"video":"https://x.com/KingWash1789/status/1948514489525305587","drills":[{"name":"Delayed Reload","setup":"3 Targets at 10 yards, 1 yard apart. 2 shooting positions separated by 5 steps of depth","start":"Hands at sides in front position","procedure":"Draw and fire 2 at each target, drop mag and grab fresh as you leave front, complete reload as you turn back down range at position 2"},{"name":"Criss Cross","setup":"3 Targets at 10 yards, 1 yard apart.","start":"Wrists above shoulders","procedure":"Draw and fire 2 at each target alternating body head, reload, fire 2 at each target alternating body head"}]},{"day":25,"video":"https://x.com/KingWash1789/status/1948806147135471665","drills":[{"name":"Low Port","setup":"2 Targets at 10 yards. Top of 'port' is 36 inches from ground","start":"Hands at sides","procedure":"Draw and fire 2 at each from side of barricade, then fire 2 at each from low port"},{"name":"Accelerator","setup":"3 Targets at 7, 15, and 25 yards, 1 yard apart.","start":"Hands at sides","procedure":"Draw and fire 2 at each target, reload, fire 2 at each target. Alternate engagement order"}]},{"day":26,"video":"https://x.com/KingWash1789/status/1949193910024020101","drills":[{"name":"Partials On The Move","setup":"3 Targets, 2 Partials at 10 yards, 1 Open at 20","start":"Hands at sides","procedure":"Draw and fire 2 at each on the move before your 5th step. Move at a brisk pace"},{"name":"25 Yard Standards","setup":"3 Targets at 25 yards, 1 yard apart.","start":"Hands at sides","procedure":"Draw and fire 2 at each target, reload, fire 2 at each target strong hand or weak hand only. Alternate."}]},{"day":27,"video":"https://x.com/KingWash1789/status/1949565598238990380","drills":[{"name":"Blending Positions","setup":"3 Targets at 15 yards","start":"Hands at sides, 3-5 steps away","procedure":"Draw and fire 2 at each target without moving your lead foot once it has planted"},{"name":"Reload On The Move","setup":"3 Targets at 10 yards, 1 yard apart. 2 Shooting positions, 3-5 steps apart","start":"Hands at sides","procedure":"Draw and fire 2 at each target from position 1, reload on the way to position 2, fire 2 at each target."}]},{"day":28,"video":"https://x.com/KingWash1789/status/1949929337119265173","drills":[{"name":"Bar Hop","setup":"2 Targets at 15 yards. 1 fault line to hop","start":"Hands at sides","procedure":"Draw and fire two at each from each side of the fault line. Alternate directions laterally."},{"name":"Shoot Off","setup":"6 Plates at 10 yards, 1 Popper at 10 yards","start":"Wrists above shoulders","procedure":"Engage each plate, reload, engage popper with 3"}]}]}];
+const DAYS=W.flatMap((w,wi)=>w.days.map(d=>({...d,wi})));
+const KEY='dryfire-competence-v1';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S={day:1,done:{},step:0.1,dr:{}};
+try{const v=JSON.parse(localStorage.getItem(KEY)||'null');if(v&&typeof v==='object')S={...S,...v}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const isMatch=d=>W[d.wi].mode==='Match Mode';
+const dr=(day,i)=>S.dr[day+'-'+i]||(S.dr[day+'-'+i]={par:null,streak:0,ok:0,bad:0,hist:[],undo:[]});
+const f2=n=>(Math.round(n*100)/100).toFixed(2);
+
+function renderGrid(){
+  const n=Object.keys(S.done).filter(k=>S.done[k]).length;
+  $('pCount').textContent=n+' of 28 days complete';
+  $('pBar').style.width=(n/28*100)+'%';
+  $('weeks').innerHTML=W.map(w=>`<div class="wk"><div><strong>${esc(w.title)}</strong><small>${esc(w.mode)}</small></div><div class="cells">${w.days.map(d=>`<button class="cell${S.done[d.day]?' done':''}${S.day===d.day?' cur':''}" data-day="${d.day}" aria-label="Day ${d.day}${S.done[d.day]?', complete':''}">${d.day}</button>`).join('')}</div></div>`).join('');
+}
+function renderDay(){
+  const d=DAYS.find(x=>x.day===S.day)||DAYS[0],w=W[d.wi],m=isMatch(d);
+  $('dTitle').innerHTML=`Day ${d.day}<span class="badge">${esc(w.mode)}</span>`;
+  $('dMeta').textContent=w.title+(w.focus?': '+w.focus:'');
+  $('dVid').href=d.video;$('dVid').textContent='Watch Day '+d.day+' demo on X';
+  const mk=$('dMark');mk.classList.toggle('on',!!S.done[d.day]);mk.textContent=S.done[d.day]?'Day complete':'Mark day complete';
+  $('dPrev').disabled=d.day===1;$('dNext').disabled=d.day===28;
+  $('stepRow').hidden=m;
+  document.querySelectorAll('[data-step]').forEach(b=>b.classList.toggle('on',+b.dataset.step===S.step));
+  $('drills').innerHTML=d.drills.map((x,i)=>{
+    const t=dr(d.day,i);
+    const track=m?`<div class="par"><div class="v">${t.ok}<small> clean</small></div><div class="v">${t.bad}<small> make-up</small></div></div>
+      <div class="btns"><button class="yes" data-act="ok" data-i="${i}">Clean rep</button><button data-act="bad" data-i="${i}">Make-up or uncalled</button><button data-act="undo" data-i="${i}" ${t.undo.length?'':'disabled'}>Undo</button><button data-act="time" data-i="${i}">Time this drill</button></div>`
+    :`<div class="par"><div><label for="par${i}" style="font-size:14px;color:var(--soft)">Current par</label><div class="v">${t.par==null?'<small>not set</small>':f2(t.par)+'<small> s</small>'}</div></div>
+      <div><input id="par${i}" type="number" step="0.05" min="0.1" placeholder="2.50" value="${t.par==null?'':f2(t.par)}" aria-label="Set par in seconds"> <button data-act="set" data-i="${i}">Set</button></div>
+      <div class="pips" aria-label="${t.streak} of 3 in a row">${[0,1,2].map(k=>`<i class="${k<t.streak?'on':''}"></i>`).join('')}<span>${t.streak}/3 in a row</span></div></div>
+      <div class="btns"><button class="yes" data-act="ok" data-i="${i}" ${t.par==null?'disabled':''}>Successful rep</button><button data-act="bad" data-i="${i}" ${t.par==null?'disabled':''}>Failed rep</button><button data-act="undo" data-i="${i}" ${t.undo.length?'':'disabled'}>Undo</button><button data-act="time" data-i="${i}">Time this drill</button></div>
+      <div class="hist">${t.ok} successful, ${t.bad} failed${t.hist.length?'. Par history: '+t.hist.map(f2).join(' > '):''}</div>`;
+    return `<article class="drill"><div><div class="n">Drill ${i+1}</div><h3>${esc(x.name)}</h3></div>
+      <dl><dt>Setup</dt><dd>${esc(x.setup||'')}</dd><dt>Start</dt><dd>${esc(x.start||'')}</dd><dt>Procedure</dt><dd>${esc(x.procedure||'')}</dd></dl>
+      <div class="track">${track}<div class="flash" id="fl${i}" role="status"></div></div></article>`}).join('');
+}
+function render(){renderGrid();renderDay()}
+function go(day,scroll){S.day=day;save();render();try{history.replaceState(null,'','#day-'+day)}catch(e){}if(scroll)$('daySec').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})}
+
+document.addEventListener('click',e=>{
+  const c=e.target.closest('[data-day]');if(c){go(+c.dataset.day,true);return}
+  const s=e.target.closest('[data-step]');if(s){S.step=+s.dataset.step;save();renderDay();return}
+  const a=e.target.closest('[data-act]');if(!a)return;
+  const d=DAYS.find(x=>x.day===S.day),i=+a.dataset.i,t=dr(d.day,i),act=a.dataset.act;
+  const snap=()=>{t.undo.push(JSON.stringify({par:t.par,streak:t.streak,ok:t.ok,bad:t.bad,hist:t.hist}));if(t.undo.length>30)t.undo.shift()};
+  let msg='';
+  if(act==='set'){const v=parseFloat($('par'+i).value);if(!(v>0)){msg='Enter a par above 0.';}else{snap();t.par=v;t.streak=0;t.hist.push(v);msg='Par set to '+f2(v)+' s.'}}
+  else if(act==='ok'){snap();t.ok++;if(!isMatch(d)){t.streak++;if(t.streak>=3){const np=Math.max(0.1,Math.round((t.par-S.step)*100)/100);msg='Three in a row. Par dropped from '+f2(t.par)+' to '+f2(np)+' s.';t.par=np;t.hist.push(np);t.streak=0;if(T.for===d.day+'-'+i)$('tPar').value=f2(np)}}}
+  else if(act==='bad'){snap();t.bad++;t.streak=0}
+  else if(act==='undo'){const u=t.undo.pop();if(u)Object.assign(t,JSON.parse(u));msg='Undone.'}
+  else if(act==='time'){loadTimer(d,i);return}
+  save();renderDay();renderGrid();if(msg)$('fl'+i).textContent=msg;
+});
+$('dPrev').onclick=()=>go(Math.max(1,S.day-1));
+$('dNext').onclick=()=>go(Math.min(28,S.day+1));
+$('dMark').onclick=()=>{S.done[S.day]=!S.done[S.day];save();render()};
+
+/* timer */
+const T={on:false,for:null,ctx:null,raf:0,startAt:0,parAt:0,loopT:0};
+function loadTimer(d,i){
+  const t=dr(d.day,i),x=d.drills[i];T.for=d.day+'-'+i;
+  const m=isMatch(d);$('tUsePar').checked=!m&&t.par!=null;if(t.par!=null)$('tPar').value=f2(t.par);
+  $('tFor').textContent='Day '+d.day+': '+x.name+(m?' (no par)':'');
+  window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});
+}
+function beep(at,freq,dur){const c=T.ctx,o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.value=freq;g.gain.setValueAtTime(0.0001,at);g.gain.exponentialRampToValueAtTime(0.35,at+0.005);g.gain.setValueAtTime(0.35,at+dur-0.01);g.gain.exponentialRampToValueAtTime(0.0001,at+dur);o.connect(g).connect(c.destination);o.start(at);o.stop(at+dur+0.02);T.osc.push(o)}
+function startRun(){
+  try{if(!T.ctx)T.ctx=new (window.AudioContext||window.webkitAudioContext)();T.ctx.resume&&T.ctx.resume()}catch(e){T.ctx=null}
+  let mn=Math.max(0,parseFloat($('tMin').value)||0),mx=Math.max(mn,parseFloat($('tMax').value)||mn);
+  const delay=mn+Math.random()*(mx-mn),par=parseFloat($('tPar').value),usePar=$('tUsePar').checked&&par>0;
+  T.on=true;T.osc=[];$('tGo').textContent='Stop';$('tGo').classList.add('stop');
+  const now=T.ctx?T.ctx.currentTime:0;T.base=performance.now();
+  T.startAt=T.base+delay*1000;T.parAt=usePar?T.startAt+par*1000:0;
+  if(T.ctx){beep(now+delay,2600,0.28);if(usePar){beep(now+delay+par,3300,0.12);beep(now+delay+par+0.16,3300,0.12)}}
+  $('tState').textContent='Standby';$('tRead').textContent='0.00';$('tRead').classList.remove('hot');
+  cancelAnimationFrame(T.raf);tick();
+}
+function tick(){
+  if(!T.on)return;const n=performance.now();
+  if(n<T.startAt){$('tState').textContent='Standby'}
+  else if(T.parAt&&n>=T.parAt){$('tRead').textContent=f2((T.parAt-T.startAt)/1000);$('tRead').classList.add('hot');$('tState').textContent='Par';
+    if($('tLoop').checked){const rest=Math.max(1,parseFloat($('tRest').value)||5);$('tState').textContent='Par. Next rep in '+rest+' s';T.on=false;T.loopT=setTimeout(()=>{if(T.looping)startRun()},rest*1000);return}
+    endRun(true);return}
+  else{const el=(n-T.startAt)/1000;$('tRead').textContent=f2(el);$('tState').textContent='Go';if(!T.parAt&&el>=30){endRun(true);return}}
+  T.raf=requestAnimationFrame(tick);
+}
+function endRun(keep){T.on=false;cancelAnimationFrame(T.raf);clearTimeout(T.loopT);T.looping=false;$('tGo').textContent='Start';$('tGo').classList.remove('stop');
+  if(!keep){(T.osc||[]).forEach(o=>{try{o.stop()}catch(e){}});$('tState').textContent='Stopped'}else if($('tState').textContent==='Go')$('tState').textContent='Stopped'}
+function toggle(){if(T.on||T.looping){endRun(false)}else{T.looping=$('tLoop').checked;startRun()}}
+$('tGo').onclick=toggle;
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&!/^(INPUT|TEXTAREA|BUTTON|A|SELECT)$/.test(e.target.tagName)){e.preventDefault();toggle()}});
+$('tPar').addEventListener('input',()=>{T.for=null;$('tFor').textContent='Manual par'});
+
+/* backup */
+const msg=t=>{$('bMsg').textContent=t};
+$('bCopy').onclick=async()=>{const txt=JSON.stringify({...S,dr:Object.fromEntries(Object.entries(S.dr).map(([k,v])=>[k,{...v,undo:[]}]))});try{await navigator.clipboard.writeText(txt);msg('Backup copied. Paste it somewhere safe.')}catch(e){$('restoreBox').hidden=false;$('restoreTxt').value=txt;$('restoreTxt').select();msg('Copy the text below manually.')}};
+$('bRestore').onclick=()=>{$('restoreBox').hidden=false;$('restoreTxt').value='';$('restoreTxt').focus();msg('')};
+$('bCancel').onclick=()=>{$('restoreBox').hidden=true};
+$('bApply').onclick=()=>{try{const v=JSON.parse($('restoreTxt').value);if(!v||typeof v!=='object'||!v.dr)throw 0;S={day:1,done:{},step:0.1,dr:{},...v};save();render();$('restoreBox').hidden=true;msg('Backup restored.')}catch(e){msg('That text is not a valid backup.')}};
+$('bReset').onclick=()=>{$('resetBox').hidden=false};
+$('bResetNo').onclick=()=>{$('resetBox').hidden=true};
+$('bResetYes').onclick=()=>{S={day:1,done:{},step:S.step,dr:{}};save();render();$('resetBox').hidden=true;msg('All progress erased.')};
+
+const h=(location.hash.match(/^#day-(\d+)$/)||[])[1];if(h&&+h>=1&&+h<=28)S.day=+h;
+window.addEventListener('hashchange',()=>{const m=location.hash.match(/^#day-(\d+)$/);if(m&&+m[1]>=1&&+m[1]<=28&&+m[1]!==S.day){S.day=+m[1];save();render()}});
+render();
+try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+}
+</script>
+</body>
+</html>
