@@ -102,6 +102,28 @@ textarea{width:100%;min-height:90px;font:14px/1.4 ui-monospace,monospace;border-
 .seg button{border:0;border-radius:0;min-width:3.4em}
 .seg button.on{background:var(--ink);color:var(--bg)}
 footer{font-size:14px;color:var(--soft)}
+.dtop{display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:space-between;align-items:start}
+.drill.isdone{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
+.notebox{display:grid;gap:6px}
+.notebox label{font-weight:600}
+.notebox small{color:var(--soft);font-size:13px;min-height:1.2em}
+.notebox textarea,.rep textarea{width:100%;font:16px/1.45 Barlow,system-ui,sans-serif;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical;margin:0}
+.rep{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:12px}
+.rep label{color:var(--soft);font-size:15px}
+.rep textarea{font:15px/1.45 ui-monospace,Menlo,Consolas,monospace;min-height:260px}
+.cell.half{background:linear-gradient(to top,var(--tan) 50%,var(--bg) 50%)}
+.logsec{padding-top:0}
+.logsec summary{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;cursor:pointer;padding:14px 0;border-top:1px solid var(--line);list-style:none}
+.logsec summary::-webkit-details-marker{display:none}
+.logsec summary::before{content:"+";font:700 26px/1 "Barlow Condensed",sans-serif;color:var(--red);width:.8em}
+.logsec details[open] summary::before{content:"\2212"}
+.logsec summary span{color:var(--soft)}
+.lede{color:var(--soft);max-width:70ch;margin:4px 0 14px}
+.log{list-style:none;margin:16px 0 0;padding:0;border-top:1px solid var(--line)}
+.log li{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.log time{color:var(--soft);font-variant-numeric:tabular-nums;font-size:14px;line-height:1.35}
+.log b{display:block;font-weight:600}
+.log .empty{display:block;color:var(--soft)}
 @media(max-width:900px){.hero{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:760px){.drills,.notes .cols{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:420px){.wk{grid-template-columns:minmax(0,1fr)}.cells{gap:4px}.timer,.grid,.drill{padding:16px}}
@@ -148,10 +170,27 @@ footer{font-size:14px;color:var(--soft)}
       <button id="dNext" aria-label="Next day">Next</button>
       <a class="vid" id="dVid" target="_blank" rel="noopener">Watch demo on X</a>
       <button class="mark" id="dMark">Mark day complete</button>
+      <button id="dReport">Day report</button>
     </div>
   </div>
   <div class="btns" id="stepRow" style="margin-bottom:16px"><span>Par drop after 3 successful reps:</span><span class="seg"><button data-step="0.1">0.10</button><button data-step="0.2">0.20</button></span></div>
   <div class="drills" id="drills"></div>
+  <div class="rep" id="rep" hidden>
+    <div class="dayhead" style="margin:0"><h3 id="repHead">Day report</h3><div class="btns"><span class="seg"><button data-fmt="text">Text message</button><button data-fmt="email">Email (plain text)</button></span><button id="repClose">Close</button></div></div>
+    <label for="repTxt">Review or add to the report before sending. It fills in from your log, pars, reps, sets and notes.</label>
+    <textarea id="repTxt" rows="12"></textarea>
+    <div class="btns"><a class="vid" id="repSms" href="sms:">Send as text</a><button id="repShare" hidden>Share</button><button id="repCopy">Copy report</button><span id="repMsg" role="status"></span></div>
+  </div>
+</div></section>
+
+<section class="band logsec" id="logSec"><div class="wrap">
+  <details id="logD"><summary><h2>Activity log</h2><span id="logCount"></span></summary>
+    <p class="lede">Every time you open the app, run a timer string, log a rep, change a par, save a note or complete a drill, it is recorded here with the date and time.</p>
+    <div class="btns"><span class="seg"><button data-scope="day" id="logScopeDay">This day</button><button data-scope="all">All days</button></span>
+      <button id="logCsv">Download log (.csv)</button><button id="logTxt">Download log (.txt)</button><button id="logCopy">Copy log</button><button id="logClear">Clear log</button><span id="logMsg" role="status"></span></div>
+    <div id="logClearBox" class="btns" hidden><span>Delete every log entry? Pars, reps, notes and completions stay.</span><button id="logClearYes">Yes, clear log</button><button id="logClearNo">Keep</button></div>
+    <ol class="log" id="logList"></ol><p class="lede" id="logMore"></p>
+  </details>
 </div></section>
 
 <section class="band notes"><div class="wrap">
@@ -169,10 +208,10 @@ footer{font-size:14px;color:var(--soft)}
     <span id="bMsg" role="status"></span>
   </div>
   <div id="restoreBox" hidden><textarea id="restoreTxt" aria-label="Paste backup"></textarea><div class="tools" style="margin-top:10px"><button id="bApply">Apply backup</button><button id="bCancel">Cancel</button></div></div>
-  <div id="resetBox" class="tools" hidden><span>Erase every par, rep and completed day?</span><button id="bResetYes">Yes, erase</button><button id="bResetNo">Keep</button></div>
+  <div id="resetBox" class="tools" hidden><span>Erase every par, rep, note, completed drill and day, and the activity log?</span><button id="bResetYes">Yes, erase</button><button id="bResetNo">Keep</button></div>
 </div></section>
 </main>
-<footer class="band"><div class="wrap">Progress saves in this browser only. Use the backup button to move it to another device. Always dry fire with an unloaded gun and no ammunition in the room.</div></footer>
+<footer class="band"><div class="wrap">Progress, notes and the activity log save in this browser only. Use the backup button to move it to another device. Always dry fire with an unloaded gun and no ammunition in the room.</div></footer>
 
 <script>
 {
@@ -180,22 +219,51 @@ const W=[{"title":"Week 1","mode":"Speed Mode","focus":"Core Skills","days":[{"d
 const DAYS=W.flatMap((w,wi)=>w.days.map(d=>({...d,wi})));
 const KEY='dryfire-competence-v1';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let S={day:1,done:{},step:0.1,dr:{}};
+let S={day:1,done:{},step:0.1,dr:{},log:[]};
 try{const v=JSON.parse(localStorage.getItem(KEY)||'null');if(v&&typeof v==='object')S={...S,...v}}catch(e){}
+if(!Array.isArray(S.log))S.log=[];
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const $=id=>document.getElementById(id);
 const isMatch=d=>W[d.wi].mode==='Match Mode';
-const dr=(day,i)=>S.dr[day+'-'+i]||(S.dr[day+'-'+i]={par:null,streak:0,ok:0,bad:0,hist:[],undo:[]});
+const dayOf=n=>DAYS.find(x=>x.day===n)||DAYS[0];
+const dr=(day,i)=>{const k=day+'-'+i,t=S.dr[k]||(S.dr[k]={});return Object.assign(t,{par:t.par??null,streak:t.streak||0,ok:t.ok||0,bad:t.bad||0,hist:t.hist||[],undo:t.undo||[],sets:t.sets||0,done:!!t.done,note:t.note||''})};
 const f2=n=>(Math.round(n*100)/100).toFixed(2);
+const drName=(day,i)=>i>=0?dayOf(day).drills[i].name:'';
+
+/* activity log */
+function addLog(e){S.log.push({ts:Date.now(),day:e.day??null,i:e.i??-1,...e});if(S.log.length>3000)S.log.splice(0,S.log.length-3000)}
+const dt=ts=>new Date(ts);
+const fDate=ts=>dt(ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+const fTime=ts=>dt(ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+function describe(e){
+  const p=e.par!=null?' (par '+f2(e.par)+' s)':'';
+  switch(e.ty){
+    case'open':return'Opened the app';
+    case'set':return'Timer string: '+f2(e.tm)+' s'+(e.atPar?', ran to par':e.par!=null?', stopped before par':', stopped')+p;
+    case'ok':return(e.match?'Clean rep':'Successful rep')+p;
+    case'bad':return(e.match?'Make-up or uncalled rep':'Failed rep')+p;
+    case'parset':return'Par set to '+f2(e.par)+' s';
+    case'pardrop':return'Par dropped from '+f2(e.from)+' to '+f2(e.par)+' s after 3 in a row';
+    case'undo':return'Undid last entry';
+    case'dDone':return'Drill marked complete';
+    case'dOpen':return'Drill marked not complete';
+    case'dayDone':return'Day marked complete'+(e.auto?' (both drills done)':'');
+    case'dayOpen':return'Day marked not complete';
+    case'note':return'Note saved: '+(e.tx||'(cleared)');
+    default:return e.ty}
+}
+const EV={open:'App opened',set:'Timer string (set)',ok:'Rep logged',bad:'Rep logged',parset:'Par set',pardrop:'Par dropped',undo:'Undo',dDone:'Drill complete',dOpen:'Drill reopened',dayDone:'Day complete',dayOpen:'Day reopened',note:'Note'};
+const where=e=>(e.day?'Day '+e.day:'')+(e.i>=0?', '+drName(e.day,e.i):'');
+try{if(!sessionStorage.getItem(KEY+'-open')){sessionStorage.setItem(KEY+'-open','1');addLog({ty:'open'});save()}}catch(e){addLog({ty:'open'});save()}
 
 function renderGrid(){
   const n=Object.keys(S.done).filter(k=>S.done[k]).length;
   $('pCount').textContent=n+' of 28 days complete';
   $('pBar').style.width=(n/28*100)+'%';
-  $('weeks').innerHTML=W.map(w=>`<div class="wk"><div><strong>${esc(w.title)}</strong><small>${esc(w.mode)}</small></div><div class="cells">${w.days.map(d=>`<button class="cell${S.done[d.day]?' done':''}${S.day===d.day?' cur':''}" data-day="${d.day}" aria-label="Day ${d.day}${S.done[d.day]?', complete':''}">${d.day}</button>`).join('')}</div></div>`).join('');
+  $('weeks').innerHTML=W.map(w=>`<div class="wk"><div><strong>${esc(w.title)}</strong><small>${esc(w.mode)}</small></div><div class="cells">${w.days.map(d=>{const half=!S.done[d.day]&&(dr(d.day,0).done||dr(d.day,1).done);return `<button class="cell${S.done[d.day]?' done':half?' half':''}${S.day===d.day?' cur':''}" data-day="${d.day}" aria-label="Day ${d.day}${S.done[d.day]?', complete':half?', one drill done':''}">${d.day}</button>`}).join('')}</div></div>`).join('');
 }
 function renderDay(){
-  const d=DAYS.find(x=>x.day===S.day)||DAYS[0],w=W[d.wi],m=isMatch(d);
+  const d=dayOf(S.day),w=W[d.wi],m=isMatch(d);
   $('dTitle').innerHTML=`Day ${d.day}<span class="badge">${esc(w.mode)}</span>`;
   $('dMeta').textContent=w.title+(w.focus?': '+w.focus:'');
   $('dVid').href=d.video;$('dVid').textContent='Watch Day '+d.day+' demo on X';
@@ -205,37 +273,120 @@ function renderDay(){
   document.querySelectorAll('[data-step]').forEach(b=>b.classList.toggle('on',+b.dataset.step===S.step));
   $('drills').innerHTML=d.drills.map((x,i)=>{
     const t=dr(d.day,i);
-    const track=m?`<div class="par"><div class="v">${t.ok}<small> clean</small></div><div class="v">${t.bad}<small> make-up</small></div></div>
+    const track=m?`<div class="par"><div class="v">${t.ok}<small> clean</small></div><div class="v">${t.bad}<small> make-up</small></div><div class="v">${t.sets}<small> sets</small></div></div>
       <div class="btns"><button class="yes" data-act="ok" data-i="${i}">Clean rep</button><button data-act="bad" data-i="${i}">Make-up or uncalled</button><button data-act="undo" data-i="${i}" ${t.undo.length?'':'disabled'}>Undo</button><button data-act="time" data-i="${i}">Time this drill</button></div>`
     :`<div class="par"><div><label for="par${i}" style="font-size:14px;color:var(--soft)">Current par</label><div class="v">${t.par==null?'<small>not set</small>':f2(t.par)+'<small> s</small>'}</div></div>
       <div><input id="par${i}" type="number" step="0.05" min="0.1" placeholder="2.50" value="${t.par==null?'':f2(t.par)}" aria-label="Set par in seconds"> <button data-act="set" data-i="${i}">Set</button></div>
       <div class="pips" aria-label="${t.streak} of 3 in a row">${[0,1,2].map(k=>`<i class="${k<t.streak?'on':''}"></i>`).join('')}<span>${t.streak}/3 in a row</span></div></div>
       <div class="btns"><button class="yes" data-act="ok" data-i="${i}" ${t.par==null?'disabled':''}>Successful rep</button><button data-act="bad" data-i="${i}" ${t.par==null?'disabled':''}>Failed rep</button><button data-act="undo" data-i="${i}" ${t.undo.length?'':'disabled'}>Undo</button><button data-act="time" data-i="${i}">Time this drill</button></div>
-      <div class="hist">${t.ok} successful, ${t.bad} failed${t.hist.length?'. Par history: '+t.hist.map(f2).join(' > '):''}</div>`;
-    return `<article class="drill"><div><div class="n">Drill ${i+1}</div><h3>${esc(x.name)}</h3></div>
+      <div class="hist">${t.ok} successful, ${t.bad} failed, ${t.sets} ${t.sets===1?'set':'sets'} timed${t.hist.length?'. Par history: '+t.hist.map(f2).join(' > '):''}</div>`;
+    return `<article class="drill${t.done?' isdone':''}"><div class="dtop"><div><div class="n">Drill ${i+1}</div><h3>${esc(x.name)}</h3></div><button class="mark${t.done?' on':''}" data-act="done" data-i="${i}" aria-pressed="${t.done}">${t.done?'Drill complete':'Mark drill complete'}</button></div>
       <dl><dt>Setup</dt><dd>${esc(x.setup||'')}</dd><dt>Start</dt><dd>${esc(x.start||'')}</dd><dt>Procedure</dt><dd>${esc(x.procedure||'')}</dd></dl>
-      <div class="track">${track}<div class="flash" id="fl${i}" role="status"></div></div></article>`}).join('');
+      <div class="track">${track}<div class="flash" id="fl${i}" role="status"></div></div>
+      <div class="notebox"><label for="note${i}">Notes</label><textarea id="note${i}" data-note="${i}" rows="3" placeholder="What you saw, what broke down, what to fix next">${esc(t.note)}</textarea><small id="ns${i}"></small></div></article>`}).join('');
 }
-function render(){renderGrid();renderDay()}
+function render(){renderGrid();renderDay();renderLog();if(!$('rep').hidden)buildReport()}
 function go(day,scroll){S.day=day;save();render();try{history.replaceState(null,'','#day-'+day)}catch(e){}if(scroll)$('daySec').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})}
+function setDay(day,on,auto){if(!!S.done[day]===on)return;S.done[day]=on;addLog({ty:on?'dayDone':'dayOpen',day,auto})}
 
 document.addEventListener('click',e=>{
   const c=e.target.closest('[data-day]');if(c){go(+c.dataset.day,true);return}
   const s=e.target.closest('[data-step]');if(s){S.step=+s.dataset.step;save();renderDay();return}
   const a=e.target.closest('[data-act]');if(!a)return;
-  const d=DAYS.find(x=>x.day===S.day),i=+a.dataset.i,t=dr(d.day,i),act=a.dataset.act;
+  const d=dayOf(S.day),i=+a.dataset.i,t=dr(d.day,i),act=a.dataset.act,m=isMatch(d);
   const snap=()=>{t.undo.push(JSON.stringify({par:t.par,streak:t.streak,ok:t.ok,bad:t.bad,hist:t.hist}));if(t.undo.length>30)t.undo.shift()};
+  const L=o=>addLog({day:d.day,i,...o});
   let msg='';
-  if(act==='set'){const v=parseFloat($('par'+i).value);if(!(v>0)){msg='Enter a par above 0.';}else{snap();t.par=v;t.streak=0;t.hist.push(v);msg='Par set to '+f2(v)+' s.'}}
-  else if(act==='ok'){snap();t.ok++;if(!isMatch(d)){t.streak++;if(t.streak>=3){const np=Math.max(0.1,Math.round((t.par-S.step)*100)/100);msg='Three in a row. Par dropped from '+f2(t.par)+' to '+f2(np)+' s.';t.par=np;t.hist.push(np);t.streak=0;if(T.for===d.day+'-'+i)$('tPar').value=f2(np)}}}
-  else if(act==='bad'){snap();t.bad++;t.streak=0}
-  else if(act==='undo'){const u=t.undo.pop();if(u)Object.assign(t,JSON.parse(u));msg='Undone.'}
+  if(act==='set'){const v=parseFloat($('par'+i).value);if(!(v>0)){msg='Enter a par above 0.';}else{snap();t.par=v;t.streak=0;t.hist.push(v);L({ty:'parset',par:v});msg='Par set to '+f2(v)+' s.'}}
+  else if(act==='ok'){snap();t.ok++;L({ty:'ok',par:m?null:t.par,match:m});if(!m){t.streak++;if(t.streak>=3){const np=Math.max(0.1,Math.round((t.par-S.step)*100)/100);msg='Three in a row. Par dropped from '+f2(t.par)+' to '+f2(np)+' s.';L({ty:'pardrop',from:t.par,par:np});t.par=np;t.hist.push(np);t.streak=0;if(T.for===d.day+'-'+i)$('tPar').value=f2(np)}}}
+  else if(act==='bad'){snap();t.bad++;t.streak=0;L({ty:'bad',par:m?null:t.par,match:m})}
+  else if(act==='undo'){const u=t.undo.pop();if(u){Object.assign(t,JSON.parse(u));L({ty:'undo'})}msg='Undone.'}
+  else if(act==='done'){t.done=!t.done;L({ty:t.done?'dDone':'dOpen'});
+    if(t.done&&dr(d.day,0).done&&dr(d.day,1).done){setDay(d.day,true,true);msg='Both drills done. Day '+d.day+' marked complete.'}
+    else if(!t.done)setDay(d.day,false)}
   else if(act==='time'){loadTimer(d,i);return}
-  save();renderDay();renderGrid();if(msg)$('fl'+i).textContent=msg;
+  save();renderDay();renderGrid();renderLog();if(!$('rep').hidden)buildReport();if(msg)$('fl'+i).textContent=msg;
 });
+let noteT=0;
+document.addEventListener('input',e=>{const n=e.target.closest('[data-note]');if(!n)return;const i=+n.dataset.note,t=dr(S.day,i);t.note=n.value;clearTimeout(noteT);noteT=setTimeout(()=>{save();const s=$('ns'+i);if(s)s.textContent='Saved'},400)});
+document.addEventListener('change',e=>{const n=e.target.closest('[data-note]');if(!n)return;const i=+n.dataset.note;addLog({ty:'note',day:S.day,i,tx:n.value.trim().slice(0,140)});save();renderLog();if(!$('rep').hidden)buildReport()});
 $('dPrev').onclick=()=>go(Math.max(1,S.day-1));
 $('dNext').onclick=()=>go(Math.min(28,S.day+1));
-$('dMark').onclick=()=>{S.done[S.day]=!S.done[S.day];save();render()};
+$('dMark').onclick=()=>{setDay(S.day,!S.done[S.day]);save();render()};
+
+/* log view and export */
+let logScope='day';
+function renderLog(){
+  const all=S.log,list=(logScope==='day'?all.filter(e=>e.day===S.day):all).slice().reverse();
+  $('logCount').textContent=all.length+(all.length===1?' entry':' entries');
+  $('logScopeDay').textContent='Day '+S.day;
+  document.querySelectorAll('[data-scope]').forEach(b=>b.classList.toggle('on',b.dataset.scope===logScope));
+  const shown=list.slice(0,200);
+  $('logList').innerHTML=shown.length?shown.map(e=>`<li><time>${fDate(e.ts)}<br>${fTime(e.ts)}</time><div><b>${esc(where(e)||'App')}</b><span>${esc(describe(e))}</span></div></li>`).join(''):'<li class="empty">Nothing logged here yet. Reps, timer strings, par changes, notes and completions show up as you train.</li>';
+  $('logMore').textContent=list.length>200?'Showing the latest 200 of '+list.length+'. Download or copy for the full log.':'';
+}
+const csvQ=v=>{v=v==null?'':String(v);return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+function logCSV(){return[['Date','Time','Day','Week','Mode','Drill','Event','Par (s)','String time (s)','Details'].join(',')].concat(S.log.map(e=>{const d=e.day?dayOf(e.day):null;return[fDate(e.ts),fTime(e.ts),e.day||'',d?W[d.wi].title:'',d?W[d.wi].mode:'',e.i>=0?drName(e.day,e.i):'',EV[e.ty]||e.ty,e.par!=null?f2(e.par):'',e.tm!=null?f2(e.tm):'',describe(e)].map(csvQ).join(',')})).join('\n')}
+function logTXT(){return'Dry Fire Program: Competence\nActivity log, exported '+fDate(Date.now())+' '+fTime(Date.now())+'\n\n'+S.log.map(e=>fDate(e.ts)+' '+fTime(e.ts)+'  '+(where(e)||'App')+': '+describe(e)).join('\n')}
+async function dl(name,text,type){
+  const out=$('logMsg');
+  try{const c=window.claude&&window.claude.use?await window.claude.use('downloads'):null;
+    if(c){try{await c.save({filename:name,data:text});out.textContent='Saved '+name+'.'}catch(e){out.textContent='Download was cancelled or blocked. Use Copy log instead.'}return}}catch(e){}
+  try{const b=new Blob([text],{type}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);out.textContent='Downloading '+name+'.'}catch(e){out.textContent='Download is blocked here. Use Copy log.'}
+}
+async function copyText(text,out){try{await navigator.clipboard.writeText(text);out.textContent='Copied.'}catch(e){out.textContent='Copy is blocked here. Select the text and copy it by hand.'}}
+const stamp=()=>new Date().toISOString().slice(0,10);
+document.querySelectorAll('[data-scope]').forEach(b=>b.onclick=()=>{logScope=b.dataset.scope;renderLog()});
+$('logCsv').onclick=()=>dl('dryfire-log-'+stamp()+'.csv',logCSV(),'text/csv');
+$('logTxt').onclick=()=>dl('dryfire-log-'+stamp()+'.txt',logTXT(),'text/plain');
+$('logCopy').onclick=()=>copyText(logTXT(),$('logMsg'));
+$('logClear').onclick=()=>{$('logClearBox').hidden=false};
+$('logClearNo').onclick=()=>{$('logClearBox').hidden=true};
+$('logClearYes').onclick=()=>{S.log=[];save();renderLog();$('logClearBox').hidden=true;$('logMsg').textContent='Log cleared. Pars, reps, notes and completions are kept.'};
+
+/* daily report */
+let repFmt='text';
+function drillStats(day,i){
+  const E=S.log.filter(e=>e.day===day&&e.i===i),sets=E.filter(e=>e.ty==='set'),t=dr(day,i);
+  const pars=E.filter(e=>e.ty==='parset'||e.ty==='pardrop').map(e=>e.par);
+  const best=sets.length?Math.min(...sets.filter(s=>!s.atPar).map(s=>s.tm).concat(Infinity)):Infinity;
+  return{t,sets,ok:E.filter(e=>e.ty==='ok').length,bad:E.filter(e=>e.ty==='bad').length,drops:E.filter(e=>e.ty==='pardrop').length,first:pars[0]??t.par,best}
+}
+function buildReport(){
+  const d=dayOf(S.day),w=W[d.wi],m=isMatch(d),E=S.log.filter(e=>e.day===d.day&&e.ty!=='open');
+  const dates=[...new Set(E.map(e=>fDate(e.ts)))];
+  const st=[0,1].map(i=>drillStats(d.day,i));
+  let out;
+  if(repFmt==='text'){
+    out=['Dry Fire Day '+d.day+' report ('+w.title+', '+w.mode+')','Trained: '+(dates.join(', ')||'no activity logged yet')];
+    d.drills.forEach((x,i)=>{const s=st[i];let l=(i+1)+') '+x.name+': '+(s.t.done?'complete':'not complete')+'.';
+      if(!m&&s.t.par!=null)l+=' Par '+(s.first!=null&&s.first!==s.t.par?f2(s.first)+' > ':'')+f2(s.t.par)+' s.';
+      l+=' '+s.sets.length+(s.sets.length===1?' set':' sets')+(s.best<Infinity?' (best '+f2(s.best)+' s)':'')+'.';
+      l+=m?' Reps '+s.ok+' clean, '+s.bad+' make-up.':' Reps '+s.ok+' good, '+s.bad+' failed.';
+      out.push(l);if(s.t.note.trim())out.push('Note: '+s.t.note.trim().replace(/\s+/g,' '))});
+    out.push('Day '+d.day+': '+(S.done[d.day]?'complete':'not complete')+'.','Demo: '+d.video);
+  }else{
+    out=['Subject: Dry Fire Program Day '+d.day+' report','','Dry Fire Program: Competence','Day '+d.day+', '+w.title+(w.focus?': '+w.focus:'')+' ('+w.mode+')','Dates trained: '+(dates.join(', ')||'No activity logged yet'),'Day status: '+(S.done[d.day]?'Complete':'Not complete'),'Demo video: '+d.video];
+    d.drills.forEach((x,i)=>{const s=st[i];out.push('','DRILL '+(i+1)+': '+x.name,'Status: '+(s.t.done?'Complete':'Not complete'),'Setup: '+(x.setup||''),'Start: '+(x.start||''),'Procedure: '+(x.procedure||''));
+      if(m)out.push('Par: none (Match Mode)');else out.push('Par: '+(s.t.par==null?'not set':(s.first!=null&&s.first!==s.t.par?'started '+f2(s.first)+' s, now '+f2(s.t.par)+' s, dropped '+s.drops+(s.drops===1?' time':' times'):f2(s.t.par)+' s')));
+      out.push('Sets (timer strings): '+s.sets.length);
+      if(s.sets.length)out.push('String times: '+s.sets.map(z=>f2(z.tm)+(z.atPar?' (ran to par)':'')).join(', '));
+      out.push(m?'Reps: '+s.ok+' clean, '+s.bad+' make-up or uncalled':'Reps: '+s.ok+' successful, '+s.bad+' failed');
+      out.push('Notes: '+(s.t.note.trim()||'None'))});
+    out.push('','Sent from the Dry Fire Program: Competence app.');
+  }
+  $('repTxt').value=out.join('\n');syncRep();
+  document.querySelectorAll('[data-fmt]').forEach(b=>b.classList.toggle('on',b.dataset.fmt===repFmt));
+  $('repHead').textContent='Day '+d.day+' report';
+}
+function syncRep(){$('repSms').href='sms:?&body='+encodeURIComponent($('repTxt').value)}
+$('repTxt').addEventListener('input',syncRep);
+$('dReport').onclick=()=>{const r=$('rep');r.hidden=!r.hidden;if(!r.hidden){buildReport();r.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'nearest'})}};
+document.querySelectorAll('[data-fmt]').forEach(b=>b.onclick=()=>{repFmt=b.dataset.fmt;buildReport()});
+$('repCopy').onclick=()=>copyText($('repTxt').value,$('repMsg'));
+$('repClose').onclick=()=>{$('rep').hidden=true};
+if(navigator.share)$('repShare').hidden=false;
+$('repShare').onclick=async()=>{const t=$('repTxt').value,lines=t.split('\n'),subj=lines[0].startsWith('Subject: ')?lines[0].slice(9):'Dry Fire Day '+S.day+' report',body=lines[0].startsWith('Subject: ')?lines.slice(2).join('\n'):t;try{await navigator.share({title:subj,text:body})}catch(e){if(e&&e.name!=='AbortError')$('repMsg').textContent='Sharing is blocked here. Use Copy.'}};
 
 /* timer */
 const T={phase:'idle',run:0,for:null,ctx:null,raf:0,startAt:0,parAt:0,loopT:0,osc:[]};
@@ -270,25 +421,31 @@ async function startRun(){
   const mn=Math.max(0,parseFloat($('tMin').value)||0),mx=Math.max(mn,parseFloat($('tMax').value)||mn);
   const delay=mn+Math.random()*(mx-mn),par=parseFloat($('tPar').value),usePar=$('tUsePar').checked&&par>0;
   const now=T.ctx?T.ctx.currentTime:0;
-  T.startAt=performance.now()+delay*1000;T.parAt=usePar?T.startAt+par*1000:0;
+  T.startAt=performance.now()+delay*1000;T.parAt=usePar?T.startAt+par*1000:0;T.curPar=usePar?par:null;
   if(T.ctx){beep(now+delay,2600,0.28);if(usePar){beep(now+delay+par,3300,0.12);beep(now+delay+par+0.16,3300,0.12)}}
   T.phase='timing';cancelAnimationFrame(T.raf);tick(run);
 }
 function tick(run){
   if(run!==T.run||T.phase!=='timing')return;const n=performance.now();
   if(n<T.startAt)setState(CMD2);
-  else if(T.parAt&&n>=T.parAt){$('tRead').textContent=f2((T.parAt-T.startAt)/1000);$('tRead').classList.add('hot');setState('Par');finishString(run,true);return}
-  else{const el=(n-T.startAt)/1000;$('tRead').textContent=f2(el);setState('Go');if(!T.parAt&&el>=30){finishString(run,true);return}}
+  else if(T.parAt&&n>=T.parAt){$('tRead').textContent=f2((T.parAt-T.startAt)/1000);$('tRead').classList.add('hot');setState('Par');finishString(run,true,(T.parAt-T.startAt)/1000,true);return}
+  else{const el=(n-T.startAt)/1000;$('tRead').textContent=f2(el);setState('Go');if(!T.parAt&&el>=30){finishString(run,true,30,false);return}}
   T.raf=requestAnimationFrame(()=>tick(run));
 }
-async function finishString(run,mayLoop){
-  T.phase='done';cancelAnimationFrame(T.raf);
+async function finishString(run,mayLoop,tm,atPar){
+  T.phase='done';cancelAnimationFrame(T.raf);logString(tm,atPar);
   await wait(450);if(run!==T.run)return;
   if(hasVoice()){setState(CMD3);await say(CMD3);if(run!==T.run)return}
   if(mayLoop&&$('tLoop').checked){
     const rest=Math.max(1,parseFloat($('tRest').value)||5);setState('Next string in '+rest+' s');
     T.loopT=setTimeout(()=>{if(run===T.run)startRun()},rest*1000);return}
   resetBtn();T.phase='idle';if(!hasVoice())setState('Done');else setState(CMD3);
+}
+function logString(tm,atPar){
+  let day=null,i=-1;if(T.for){[day,i]=T.for.split('-').map(Number);dr(day,i).sets++}
+  addLog({ty:'set',day,i,tm,atPar,par:T.curPar});save();
+  if(day===S.day&&!(document.activeElement&&document.activeElement.matches('textarea')))renderDay();
+  renderLog();if(!$('rep').hidden&&day===S.day)buildReport();
 }
 function resetBtn(){$('tGo').textContent='Start';$('tGo').classList.remove('stop')}
 function stopAll(){T.run++;T.phase='idle';cancelAnimationFrame(T.raf);clearTimeout(T.loopT);T.osc.forEach(o=>{try{o.stop()}catch(e){}});try{speechSynthesis.cancel()}catch(e){}resetBtn()}
@@ -297,7 +454,7 @@ function toggle(){
   if(T.phase==='timing'&&performance.now()>=T.startAt){
     /* shooter finished the string before par or with no par: end it like a completed string */
     const el=(performance.now()-T.startAt)/1000;stopAll();$('tRead').textContent=f2(el);
-    const run=T.run;T.phase='done';$('tGo').textContent='Stop';$('tGo').classList.add('stop');finishString(run,false);return}
+    const run=T.run;T.phase='done';$('tGo').textContent='Stop';$('tGo').classList.add('stop');finishString(run,false,el,false);return}
   stopAll();setState('Stopped');
 }
 try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}catch(e){}
@@ -305,22 +462,23 @@ try{const v=localStorage.getItem(KEY+'-voice');if(v==='0')$('tVoice').checked=fa
 $('tVoice').addEventListener('change',()=>{try{localStorage.setItem(KEY+'-voice',$('tVoice').checked?'1':'0')}catch(e){}});
 $('tGo').onclick=toggle;
 document.addEventListener('keydown',e=>{if(e.code==='Space'&&!/^(INPUT|TEXTAREA|BUTTON|A|SELECT)$/.test(e.target.tagName)){e.preventDefault();toggle()}});
-$('tPar').addEventListener('input',()=>{T.for=null;$('tFor').textContent='Manual par'});
+
 
 /* backup */
 const msg=t=>{$('bMsg').textContent=t};
 $('bCopy').onclick=async()=>{const txt=JSON.stringify({...S,dr:Object.fromEntries(Object.entries(S.dr).map(([k,v])=>[k,{...v,undo:[]}]))});try{await navigator.clipboard.writeText(txt);msg('Backup copied. Paste it somewhere safe.')}catch(e){$('restoreBox').hidden=false;$('restoreTxt').value=txt;$('restoreTxt').select();msg('Copy the text below manually.')}};
 $('bRestore').onclick=()=>{$('restoreBox').hidden=false;$('restoreTxt').value='';$('restoreTxt').focus();msg('')};
 $('bCancel').onclick=()=>{$('restoreBox').hidden=true};
-$('bApply').onclick=()=>{try{const v=JSON.parse($('restoreTxt').value);if(!v||typeof v!=='object'||!v.dr)throw 0;S={day:1,done:{},step:0.1,dr:{},...v};save();render();$('restoreBox').hidden=true;msg('Backup restored.')}catch(e){msg('That text is not a valid backup.')}};
+$('bApply').onclick=()=>{try{const v=JSON.parse($('restoreTxt').value);if(!v||typeof v!=='object'||!v.dr)throw 0;S={day:1,done:{},step:0.1,dr:{},log:[],...v};save();render();$('restoreBox').hidden=true;msg('Backup restored.')}catch(e){msg('That text is not a valid backup.')}};
 $('bReset').onclick=()=>{$('resetBox').hidden=false};
 $('bResetNo').onclick=()=>{$('resetBox').hidden=true};
-$('bResetYes').onclick=()=>{S={day:1,done:{},step:S.step,dr:{}};save();render();$('resetBox').hidden=true;msg('All progress erased.')};
+$('bResetYes').onclick=()=>{S={day:1,done:{},step:S.step,dr:{},log:[]};save();render();$('resetBox').hidden=true;msg('All progress erased.')};
 
 const h=(location.hash.match(/^#day-(\d+)$/)||[])[1];if(h&&+h>=1&&+h<=28)S.day=+h;
 window.addEventListener('hashchange',()=>{const m=location.hash.match(/^#day-(\d+)$/);if(m&&+m[1]>=1&&+m[1]<=28&&+m[1]!==S.day){S.day=+m[1];save();render()}});
 render();
-try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+if(location.hash==='#log')$('logD').open=true;
+try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=true;location.reload()}});navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{})}}catch(e){}
 }
 </script>
 </body>
