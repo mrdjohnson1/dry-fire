@@ -97,6 +97,11 @@ dt{font-weight:600}dd{margin:0}
 .notes p{margin:0;max-width:68ch}
 .tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;align-items:center}
 .tools button{background:var(--steel2);color:#efe8da;border-color:#45484d}
+.tools button#bApply,.tools button.pick{background:var(--red);border-color:var(--red);color:#fff}
+.restore{margin-top:16px;padding:18px;border:1px solid #45484d;border-radius:12px;background:#24262a}
+.restore p{color:#ffcfb0;font-weight:500}
+.fresh{margin:0;font-size:15px;color:var(--soft);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fresh button{min-height:40px}
 textarea{width:100%;min-height:90px;font:14px/1.4 ui-monospace,monospace;border-radius:8px;padding:8px;background:var(--steel2);color:#fff;border:1px solid #45484d;margin-top:10px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .seg button{border:0;border-radius:0;min-width:3.4em}
@@ -159,6 +164,7 @@ footer{font-size:14px;color:var(--soft)}
     <div class="stat"><h2>Progress</h2><span id="pCount"></span></div>
     <div class="meter"><i id="pBar"></i></div>
     <div id="weeks"></div>
+    <p class="fresh" id="fresh" hidden>Reinstalled or cleared your browser? <button id="freshRestore">Restore from backup</button></p>
   </div>
 </div></section>
 
@@ -201,17 +207,28 @@ footer{font-size:14px;color:var(--soft)}
     <div><h3>Warm Up</h3><p>Set a timer for 5-10 minutes. Engage targets at will. Stretch your fingers. Shake your hands out. Get them warm and ready to work. This is also a good opportunity to play with drills that you find particularly difficult to execute subconsiously.</p></div>
     <div><h3>Daily Drills</h3><p>Set a timer for at least 5 minutes and follow the instructions outlined above. Your goal is to get to the limit of your ability to see and manipulate the gun. This is the stimulus required to elicit the adaptation of increased speed.</p></div>
   </div>
-  <div class="tools">
-    <button id="bCopy">Copy progress backup</button>
+  <h3 style="margin-top:36px" id="backup">Backup and restore</h3>
+  <p style="margin-top:6px">Save a backup to your phone's Files app, Google Drive, iCloud or any folder. If you reinstall the app, clear your browser or switch devices, restore it to bring back every par, rep, set, note, completed drill and day, and the full log.</p>
+  <div class="tools" style="margin-top:14px">
+    <button id="bDlCsv">Save backup (.csv)</button>
+    <button id="bDlJson">Save backup (.json)</button>
     <button id="bRestore">Restore from backup</button>
+    <button id="bCopy">Copy backup text</button>
     <button id="bReset">Reset all progress</button>
     <span id="bMsg" role="status"></span>
   </div>
-  <div id="restoreBox" hidden><textarea id="restoreTxt" aria-label="Paste backup"></textarea><div class="tools" style="margin-top:10px"><button id="bApply">Apply backup</button><button id="bCancel">Cancel</button></div></div>
+  <div id="restoreBox" class="restore" hidden>
+    <div class="tools" style="margin-top:0"><button id="rPick" class="pick">Choose backup file</button><span>.csv or .json saved from this app</span></div>
+    <input type="file" id="rFile" accept=".csv,.json,text/csv,text/comma-separated-values,application/json,text/plain" hidden>
+    <label for="restoreTxt" style="display:block;margin-top:12px">Or paste backup text</label>
+    <textarea id="restoreTxt"></textarea>
+    <p id="rSum" role="status"></p>
+    <div class="tools" style="margin-top:6px"><button id="bApply" hidden>Restore this backup</button><button id="bCancel">Cancel</button></div>
+  </div>
   <div id="resetBox" class="tools" hidden><span>Erase every par, rep, note, completed drill and day, and the activity log?</span><button id="bResetYes">Yes, erase</button><button id="bResetNo">Keep</button></div>
 </div></section>
 </main>
-<footer class="band"><div class="wrap">Progress, notes and the activity log save in this browser only. Use the backup button to move it to another device. Always dry fire with an unloaded gun and no ammunition in the room.</div></footer>
+<footer class="band"><div class="wrap">Progress, notes and the activity log save in this browser only. Save a backup regularly so you can restore after a reinstall, a cleared browser or a new device. Always dry fire with an unloaded gun and no ammunition in the room.</div></footer>
 
 <script>
 {
@@ -249,7 +266,7 @@ function describe(e){
     case'dOpen':return'Drill marked not complete';
     case'dayDone':return'Day marked complete'+(e.auto?' (both drills done)':'');
     case'dayOpen':return'Day marked not complete';
-    case'note':return'Note saved: '+(e.tx||'(cleared)');
+    case'note':return'Note saved: '+(e.tx?(e.tx.length>140?e.tx.slice(0,140)+'...':e.tx):'(cleared)');
     default:return e.ty}
 }
 const EV={open:'App opened',set:'Timer string (set)',ok:'Rep logged',bad:'Rep logged',parset:'Par set',pardrop:'Par dropped',undo:'Undo',dDone:'Drill complete',dOpen:'Drill reopened',dayDone:'Day complete',dayOpen:'Day reopened',note:'Note'};
@@ -285,7 +302,7 @@ function renderDay(){
       <div class="track">${track}<div class="flash" id="fl${i}" role="status"></div></div>
       <div class="notebox"><label for="note${i}">Notes</label><textarea id="note${i}" data-note="${i}" rows="3" placeholder="What you saw, what broke down, what to fix next">${esc(t.note)}</textarea><small id="ns${i}"></small></div></article>`}).join('');
 }
-function render(){renderGrid();renderDay();renderLog();if(!$('rep').hidden)buildReport()}
+function render(){$('fresh').hidden=!(!S.log.some(e=>e.ty!=='open')&&!Object.values(S.dr).some(hasData));renderGrid();renderDay();renderLog();if(!$('rep').hidden)buildReport()}
 function go(day,scroll){S.day=day;save();render();try{history.replaceState(null,'','#day-'+day)}catch(e){}if(scroll)$('daySec').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})}
 function setDay(day,on,auto){if(!!S.done[day]===on)return;S.done[day]=on;addLog({ty:on?'dayDone':'dayOpen',day,auto})}
 
@@ -309,7 +326,7 @@ document.addEventListener('click',e=>{
 });
 let noteT=0;
 document.addEventListener('input',e=>{const n=e.target.closest('[data-note]');if(!n)return;const i=+n.dataset.note,t=dr(S.day,i);t.note=n.value;clearTimeout(noteT);noteT=setTimeout(()=>{save();const s=$('ns'+i);if(s)s.textContent='Saved'},400)});
-document.addEventListener('change',e=>{const n=e.target.closest('[data-note]');if(!n)return;const i=+n.dataset.note;addLog({ty:'note',day:S.day,i,tx:n.value.trim().slice(0,140)});save();renderLog();if(!$('rep').hidden)buildReport()});
+document.addEventListener('change',e=>{const n=e.target.closest('[data-note]');if(!n)return;const i=+n.dataset.note;addLog({ty:'note',day:S.day,i,tx:n.value.trim()});save();renderLog();if(!$('rep').hidden)buildReport()});
 $('dPrev').onclick=()=>go(Math.max(1,S.day-1));
 $('dNext').onclick=()=>go(Math.min(28,S.day+1));
 $('dMark').onclick=()=>{setDay(S.day,!S.done[S.day]);save();render()};
@@ -335,10 +352,10 @@ async function dl(name,text,type){
   try{const b=new Blob([text],{type}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);out.textContent='Downloading '+name+'.'}catch(e){out.textContent='Download is blocked here. Use Copy log.'}
 }
 async function copyText(text,out){try{await navigator.clipboard.writeText(text);out.textContent='Copied.'}catch(e){out.textContent='Copy is blocked here. Select the text and copy it by hand.'}}
-const stamp=()=>new Date().toISOString().slice(0,10);
+const stamp=()=>{const d=new Date(),z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())};
 document.querySelectorAll('[data-scope]').forEach(b=>b.onclick=()=>{logScope=b.dataset.scope;renderLog()});
-$('logCsv').onclick=()=>dl('dryfire-log-'+stamp()+'.csv',logCSV(),'text/csv');
-$('logTxt').onclick=()=>dl('dryfire-log-'+stamp()+'.txt',logTXT(),'text/plain');
+$('logCsv').onclick=()=>saveFile('dryfire-log-'+stamp()+'.csv',toCSV(false),'text/csv',$('logMsg'));
+$('logTxt').onclick=()=>saveFile('dryfire-log-'+stamp()+'.txt',logTXT(),'text/plain',$('logMsg'));
 $('logCopy').onclick=()=>copyText(logTXT(),$('logMsg'));
 $('logClear').onclick=()=>{$('logClearBox').hidden=false};
 $('logClearNo').onclick=()=>{$('logClearBox').hidden=true};
@@ -464,15 +481,137 @@ $('tGo').onclick=toggle;
 document.addEventListener('keydown',e=>{if(e.code==='Space'&&!/^(INPUT|TEXTAREA|BUTTON|A|SELECT)$/.test(e.target.tagName)){e.preventDefault();toggle()}});
 
 
-/* backup */
+/* backup and restore */
 const msg=t=>{$('bMsg').textContent=t};
-$('bCopy').onclick=async()=>{const txt=JSON.stringify({...S,dr:Object.fromEntries(Object.entries(S.dr).map(([k,v])=>[k,{...v,undo:[]}]))});try{await navigator.clipboard.writeText(txt);msg('Backup copied. Paste it somewhere safe.')}catch(e){$('restoreBox').hidden=false;$('restoreTxt').value=txt;$('restoreTxt').select();msg('Copy the text below manually.')}};
-$('bRestore').onclick=()=>{$('restoreBox').hidden=false;$('restoreTxt').value='';$('restoreTxt').focus();msg('')};
-$('bCancel').onclick=()=>{$('restoreBox').hidden=true};
-$('bApply').onclick=()=>{try{const v=JSON.parse($('restoreTxt').value);if(!v||typeof v!=='object'||!v.dr)throw 0;S={day:1,done:{},step:0.1,dr:{},log:[],...v};save();render();$('restoreBox').hidden=true;msg('Backup restored.')}catch(e){msg('That text is not a valid backup.')}};
+const COLS=['Record','Timestamp','Date','Time','Day','Drill #','Drill','Event','Event code','Par (s)','From par (s)','String time (s)','Ran to par','Match mode','Details','Note','Streak','Reps good','Reps failed','Sets','Complete','Par history','Setting','Value'];
+const crow=o=>COLS.map(c=>csvQ(o[c])).join(',');
+const hasData=t=>t.par!=null||t.ok||t.bad||t.sets||t.done||(t.note||'').trim()||(t.hist||[]).length;
+function toCSV(withState){
+  const rows=[COLS.join(',')];
+  if(withState){
+    rows.push(crow({Record:'setting',Setting:'format',Value:'dryfire-backup-1'}),crow({Record:'setting',Setting:'step',Value:S.step}),crow({Record:'setting',Setting:'day',Value:S.day}));
+    DAYS.forEach(d=>{if(S.done[d.day])rows.push(crow({Record:'day',Day:d.day,Complete:'yes'}))});
+    Object.keys(S.dr).forEach(k=>{const[day,i]=k.split('-').map(Number);if(!dayOf(day)||!(i>=0))return;const t=dr(day,i);if(!hasData(t))return;
+      rows.push(crow({Record:'drill',Day:day,'Drill #':i+1,Drill:drName(day,i),'Par (s)':t.par??'',Streak:t.streak,'Reps good':t.ok,'Reps failed':t.bad,Sets:t.sets,Complete:t.done?'yes':'no','Par history':t.hist.join(' '),Note:t.note}))});
+  }
+  S.log.forEach(e=>rows.push(crow({Record:'log',Timestamp:new Date(e.ts).toISOString(),Date:fDate(e.ts),Time:fTime(e.ts),Day:e.day??'','Drill #':e.i>=0?e.i+1:'',Drill:e.i>=0?drName(e.day,e.i):'',Event:EV[e.ty]||e.ty,'Event code':e.ty,'Par (s)':e.par??'','From par (s)':e.from??'','String time (s)':e.tm!=null?f2(e.tm):'','Ran to par':e.ty==='set'?(e.atPar?'yes':'no'):'','Match mode':e.match?'yes':'',Details:describe(e),Note:e.ty==='note'?(e.tx||''):''})));
+  return '﻿'+rows.join('\r\n');
+}
+function toJSON(){return JSON.stringify({format:'dryfire-backup-1',exported:new Date().toISOString(),day:S.day,step:S.step,done:S.done,dr:Object.fromEntries(Object.entries(S.dr).map(([k,v])=>[k,{...v,undo:[]}])),log:S.log},null,1)}
+function parseCSV(text){
+  text=text.replace(/^﻿/,'');const out=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===','){row.push(f);f=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);f='';if(row.some(x=>x!==''))out.push(row);row=[]}
+    else f+=c}
+  row.push(f);if(row.some(x=>x!==''))out.push(row);
+  if(!out.length)return[];const H=out[0].map(h=>h.trim());return out.slice(1).map(r=>Object.fromEntries(H.map((h,j)=>[h,r[j]??''])));
+}
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:null};
+const MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function looseTime(ds,ts){const d=/([a-z]{3})[a-z]*\.? (\d{1,2}), (\d{4})/i.exec(ds||''),t=/(\d{1,2}):(\d{2})\s*([ap])?/i.exec(ts||'');if(!d||!(d[1].toLowerCase() in MON))return null;let h=t?+t[1]:0;if(t&&t[3]){h=h%12+(/p/i.test(t[3])?12:0)}return new Date(+d[3],MON[d[1].toLowerCase()],+d[2],h,t?+t[2]:0).getTime()}
+const LABEL={'App opened':'open','Timer string (set)':'set','Par set':'parset','Par dropped':'pardrop','Undo':'undo','Drill complete':'dDone','Drill reopened':'dOpen','Day complete':'dayDone','Day reopened':'dayOpen','Note':'note'};
+function rowToLog(r,n){
+  let ty=(r['Event code']||'').trim();const det=r.Details||'';
+  if(!EV[ty]){const ev=(r.Event||'').trim();ty=EV[ev]?ev:LABEL[ev]||(ev==='Rep logged'?(/^(Successful|Clean)/.test(det)?'ok':'bad'):'')}
+  if(!ty)return null;
+  const day=parseInt(r.Day)||null;let i=parseInt(r['Drill #'])-1;
+  if(!(i>=0)&&day&&r.Drill){i=dayOf(day).drills.findIndex(x=>x.name===r.Drill.trim())}
+  if(!(i>=0))i=-1;
+  const ts=Date.parse(r.Timestamp)||looseTime(r.Date,r.Time)||Date.now();
+  const e={ts:ts+n*0,day,i,ty};
+  const par=num(r['Par (s)']);if(par!=null)e.par=par;
+  const tm=num(r['String time (s)']);if(tm!=null)e.tm=tm;
+  if(ty==='set')e.atPar=r['Ran to par']?r['Ran to par']==='yes':/ran to par/.test(det);
+  if(ty==='ok'||ty==='bad')e.match=r['Match mode']?r['Match mode']==='yes':/^(Clean|Make-up)/.test(det);
+  if(ty==='pardrop'){const m=/from ([\d.]+) to ([\d.]+)/.exec(det);e.from=num(r['From par (s)'])??(m?+m[1]:null);if(e.par==null&&m)e.par=+m[2]}
+  if(ty==='note')e.tx=r.Note!==undefined&&r.Record?r.Note:det.replace(/^Note saved: /,'').replace(/^\(cleared\)$/,'');
+  if(ty==='dayDone'&&/both drills/.test(det))e.auto=true;
+  return e;
+}
+function replay(log){
+  const dr2={},done={},stk={};
+  log.forEach(e=>{
+    if(!e.day)return;
+    if(e.ty==='dayDone'||e.ty==='dayOpen'){done[e.day]=e.ty==='dayDone';return}
+    if(!(e.i>=0))return;const k=e.day+'-'+e.i;
+    const t=dr2[k]||(dr2[k]={par:null,streak:0,ok:0,bad:0,hist:[],undo:[],sets:0,done:false,note:''}),s=stk[k]||(stk[k]=[]);
+    const snap=()=>s.push(JSON.stringify({par:t.par,streak:t.streak,ok:t.ok,bad:t.bad,hist:t.hist}));
+    switch(e.ty){
+      case'parset':snap();t.par=e.par;t.streak=0;t.hist=t.hist.concat(e.par);break;
+      case'ok':snap();t.ok++;if(!e.match)t.streak++;break;
+      case'pardrop':t.par=e.par;t.streak=0;t.hist=t.hist.concat(e.par);break;
+      case'bad':snap();t.bad++;t.streak=0;break;
+      case'undo':{const u=s.pop();if(u)Object.assign(t,JSON.parse(u));break}
+      case'set':t.sets++;break;
+      case'dDone':t.done=true;break;case'dOpen':t.done=false;break;
+      case'note':t.note=e.tx||'';break}
+  });
+  return{dr:dr2,done};
+}
+function fromCSV(text){
+  const R=parseCSV(text);if(!R.length)throw new Error('empty');
+  const log=[],out={day:1,step:0.1,done:{},dr:{},log};let hasState=false;
+  R.forEach((r,n)=>{
+    const rec=(r.Record||'log').trim();
+    if(rec==='setting'){if(r.Setting==='step')out.step=num(r.Value)===0.2?0.2:0.1;if(r.Setting==='day'){const d=parseInt(r.Value);if(d>=1&&d<=28)out.day=d}}
+    else if(rec==='day'){hasState=true;const d=parseInt(r.Day);if(d)out.done[d]=r.Complete!=='no'}
+    else if(rec==='drill'){hasState=true;const d=parseInt(r.Day),i=parseInt(r['Drill #'])-1;if(!(d>=1&&d<=28&&i>=0&&i<=1))return;
+      out.dr[d+'-'+i]={par:num(r['Par (s)']),streak:parseInt(r.Streak)||0,ok:parseInt(r['Reps good'])||0,bad:parseInt(r['Reps failed'])||0,sets:parseInt(r.Sets)||0,done:r.Complete==='yes',hist:(r['Par history']||'').split(/\s+/).map(num).filter(x=>x!=null),note:r.Note||'',undo:[]}}
+    else{const e=rowToLog(r,n);if(e)log.push(e)}
+  });
+  if(!log.length&&!hasState)throw new Error('nothing');
+  log.sort((a,b)=>a.ts-b.ts);
+  if(!hasState){const r=replay(log);out.dr=r.dr;out.done=r.done;out.rebuilt=true}
+  return out;
+}
+function fromJSON(text){
+  const v=JSON.parse(text.replace(/^﻿/,''));if(!v||typeof v!=='object'||(!v.dr&&!v.log))throw new Error('bad');
+  const out={day:parseInt(v.day)||1,step:v.step===0.2?0.2:0.1,done:v.done||{},dr:v.dr||{},log:Array.isArray(v.log)?v.log:[]};
+  Object.values(out.dr).forEach(t=>{t.undo=[]});return out;
+}
+function readBackup(text){const s=text.trim();if(!s)throw new Error('empty');return s[0]==='{'||s.startsWith('﻿{')?fromJSON(s):fromCSV(s)}
+let pending=null;
+const pl=(n,a,b)=>n+' '+(n===1?a:b);
+function preview(text,src){
+  try{pending=readBackup(text)}catch(e){pending=null;$('rSum').textContent='That '+(src||'text')+' is not a Dry Fire backup. Use a .json or .csv file saved from this app.';$('bApply').hidden=true;return}
+  const P=pending,drills=Object.values(P.dr).filter(hasData).length,days=Object.values(P.done).filter(Boolean).length,last=P.log.length?Math.max(...P.log.map(e=>e.ts)):0,notes=Object.values(P.dr).filter(t=>(t.note||'').trim()).length;
+  $('rSum').textContent='Backup found'+(src?' in '+src:'')+': '+pl(P.log.length,'log entry','log entries')+', '+pl(drills,'drill','drills')+' with data, '+notes+' with notes, '+pl(days,'day','days')+' complete'+(last?', last activity '+fDate(last)+' '+fTime(last):'')+'. '+(P.rebuilt?'Pars, reps, sets, notes and completions will be rebuilt from the log. ':'')+'Restoring replaces what is in this browser now.';
+  $('bApply').hidden=false;
+}
+function openRestore(){$('restoreBox').hidden=false;$('rSum').textContent='';$('bApply').hidden=true;pending=null;$('restoreTxt').value='';msg('')}
+
+/* save a file: Claude viewer capability, then folder picker (computers), then share sheet (Save to Files on iPhone, Files or Drive on Android), then plain download */
+function saveFile(name,text,type,out){
+  const done=t=>{out.textContent=t};
+  if(window.claude&&window.claude.use){
+    window.claude.use('downloads').then(c=>{if(!c)throw 0;return c.save({filename:name,data:text}).then(()=>done('Saved '+name+'.'),()=>done('Save was cancelled.'))}).catch(()=>plain(name,text,type,done));return}
+  if(window.showSaveFilePicker){
+    const ext=name.split('.').pop();
+    window.showSaveFilePicker({suggestedName:name,types:[{description:ext.toUpperCase()+' file',accept:{[type]:['.'+ext]}}]})
+      .then(h=>h.createWritable().then(w=>w.write(new Blob([text],{type})).then(()=>w.close())).then(()=>done('Saved '+name+' to the folder you picked.')))
+      .catch(e=>{if(e&&e.name==='AbortError')done('Save was cancelled.');else plain(name,text,type,done)});return}
+  let file=null;try{file=new File([text],name,{type})}catch(e){}
+  if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:name}).then(()=>done('Choose "Save to Files" (iPhone) or Files or Drive (Android) to pick the folder. Saved or sent: '+name+'.'),e=>{if(e&&e.name==='AbortError')done('Save was cancelled.');else plain(name,text,type,done)});return}
+  plain(name,text,type,done);
+}
+function plain(name,text,type,done){try{const b=new Blob([text],{type}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);done('Downloading '+name+' to your Downloads folder.')}catch(e){done('Saving files is blocked here. Use Copy backup text instead.')}}
+const fname=ext=>'dryfire-backup-'+stamp()+'.'+ext;
+$('bDlCsv').onclick=()=>saveFile(fname('csv'),toCSV(true),'text/csv',$('bMsg'));
+$('bDlJson').onclick=()=>saveFile(fname('json'),toJSON(),'application/json',$('bMsg'));
+$('bCopy').onclick=()=>copyText(toJSON(),$('bMsg'));
+$('bRestore').onclick=openRestore;
+$('rPick').onclick=()=>{$('rFile').value='';$('rFile').click()};
+$('rFile').onchange=()=>{const f=$('rFile').files[0];if(!f)return;const r=new FileReader();r.onload=()=>preview(String(r.result),f.name);r.onerror=()=>{$('rSum').textContent='Could not read '+f.name+'.'};r.readAsText(f)};
+$('restoreTxt').addEventListener('input',()=>{const v=$('restoreTxt').value;if(v.trim())preview(v,'');else{$('rSum').textContent='';$('bApply').hidden=true}});
+$('bCancel').onclick=()=>{$('restoreBox').hidden=true;pending=null};
+$('bApply').onclick=()=>{if(!pending)return;const P=pending;S={day:P.day,step:P.step,done:P.done,dr:P.dr,log:P.log};save();render();$('restoreBox').hidden=true;pending=null;msg('Backup restored. Everything is back as it was when the backup was saved.')};
 $('bReset').onclick=()=>{$('resetBox').hidden=false};
 $('bResetNo').onclick=()=>{$('resetBox').hidden=true};
 $('bResetYes').onclick=()=>{S={day:1,done:{},step:S.step,dr:{},log:[]};save();render();$('resetBox').hidden=true;msg('All progress erased.')};
+$('freshRestore').onclick=()=>{openRestore();$('rFile').value='';$('rFile').click();$('restoreBox').scrollIntoView({block:'center'})};
 
 const h=(location.hash.match(/^#day-(\d+)$/)||[])[1];if(h&&+h>=1&&+h<=28)S.day=+h;
 window.addEventListener('hashchange',()=>{const m=location.hash.match(/^#day-(\d+)$/);if(m&&+m[1]>=1&&+m[1]<=28&&+m[1]!==S.day){S.day=+m[1];save();render()}});
